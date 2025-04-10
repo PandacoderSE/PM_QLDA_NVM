@@ -1,0 +1,41 @@
+/* src/components/FlowerStyles.css */
+body {
+  background-color: #111;
+  font-family: "Signika Negative", "Asap", sans-serif;
+  color: white;
+  overflow: hidden;
+}
+
+.flower-container {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dot {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  background: url("https://cdn-001.haui.edu.vn//img/gs/cherry-blossom.png");
+  background-size: 100% 100%;
+}
+
+.dot2 {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  background: url("https://cdn-001.haui.edu.vn//img/gs/cherry-blossom.png");
+  background-size: 100% 100%;
+}
+
+.dot3 {
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  background: url("https://cdn-001.haui.edu.vn//img/gs/cherry-blossom.png");
+  background-size: 100% 100%;
+}

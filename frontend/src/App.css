@@ -1,0 +1,48 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background-color: #ffffff;
+  --text-color: #000000;
+  --button-bg-color: #f0f0f0;
+  --button-text-color: #000000;
+  --background-sidebar-color: #f3ebeb;
+  --text-sidebar-color: #00a2ff;
+  --icon-color: #000;
+
+}
+
+.dark {
+  --background-color: #121212;
+  --text-color: #ffffff;
+  --button-bg-color: #3a3a3a;
+  --button-text-color: #ffffff;
+  --background-sidebar-color: #464343;
+  --text-sidebar-color: #ffffff;
+  --icon-color: #ffffff;
+}
+.bg-sidebar-color{
+  background-color: var(--background-sidebar-color);
+}
+.text-sidebar-color{
+  color: var(--text-sidebar-color)
+}
+.bg-color {
+  background-color: var(--background-color);
+}
+.icon-color {
+  fill: var(--icon-color)
+}
+.text-color {
+  color: var(--text-color);
+}
+
+.button-bg-color {
+  background-color: var(--button-bg-color);
+}
+
+.button-text-color {
+  color: var(--button-text-color);
+}

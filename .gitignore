@@ -1,0 +1,11 @@
+# Bỏ qua file log
+*.log
+
+# Bỏ qua thư mục node_modules
+frontend\node_modules
+
+# Bỏ qua file cấu hình cục bộ
+.env
+
+# Bỏ qua tất cả file .txt
+*.txt
