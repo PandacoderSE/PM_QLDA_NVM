@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.ApiResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
+import usol.group_4.ITDeviceManagement.DTO.response.UserUseDevice;
+import usol.group_4.ITDeviceManagement.entity.User;
+import usol.group_4.ITDeviceManagement.repository.UserRepository;
 import usol.group_4.ITDeviceManagement.service.IUserService;
 
 import javax.validation.Valid;
@@ -18,7 +21,8 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
-
+    @Autowired
+    private UserRepository userRepository ;
     @GetMapping("/getAll")
     public ApiResponse<?> getUsers() {
         var users = userService.getAlls();
@@ -40,6 +44,11 @@ public class UserController {
     public ApiResponse<?> getUser(@PathVariable String id) {
         var user = userService.getUser(id);
         return ApiResponse.<UserResponse>builder().success(true).message("get user successfully").data(user).build();
+    }
+    @GetMapping("getUserDevice/{id}")
+    public ApiResponse<?> getUserDevice(@PathVariable String id) {
+        var user = userService.getUserDevice(id) ;
+        return ApiResponse.<UserUseDevice>builder().success(true).message("get user successfully").data(user).build();
     }
     @GetMapping("getRoleByUser")
     public ApiResponse<?>  getUserRole() {

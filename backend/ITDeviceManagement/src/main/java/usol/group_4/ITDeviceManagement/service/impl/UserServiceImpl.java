@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
+import usol.group_4.ITDeviceManagement.DTO.response.UserUseDevice;
+import usol.group_4.ITDeviceManagement.entity.Device;
 import usol.group_4.ITDeviceManagement.entity.Role;
 import usol.group_4.ITDeviceManagement.entity.User;
 import usol.group_4.ITDeviceManagement.exception.ErrorCode;
@@ -74,6 +76,30 @@ public class UserServiceImpl implements IUserService {
         } else {
             // Xử lý trường hợp không tìm thấy user
             throw new RuntimeException("User not found with id: " + id);
+        }
+    }
+
+    @Override
+    public UserUseDevice getUserDevice(String un) {
+        Optional<User> optionalUser = userRepository.findById(un);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            List<String> seriDevice = new ArrayList<>() ;
+            for(Device x : user.getDevices()){
+                seriDevice.add(x.getSerialNumber()) ;
+            }
+
+            return UserUseDevice.builder()
+                    .id(user.getId())
+                    .name(user.getLastname() + " " + user.getFirstname())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .status(user.getStatus())
+                    .listDevice(seriDevice)
+                    .build();
+        } else {
+            // Xử lý trường hợp không tìm thấy user
+            throw new RuntimeException("User not found with id: " + un);
         }
     }
 

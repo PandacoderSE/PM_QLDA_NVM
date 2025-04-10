@@ -35,7 +35,7 @@ public class Device extends Auditable{
     @JoinColumn(name = "category_id")
     private Category category;
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "create_by")
+    @JoinColumn(name = "staff_id")
     private User user;
     private String status;
 	private String owner_id;

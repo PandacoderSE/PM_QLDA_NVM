@@ -27,6 +27,7 @@ import usol.group_4.ITDeviceManagement.exception.ErrorCode;
 import usol.group_4.ITDeviceManagement.repository.CategoryRepository;
 import usol.group_4.ITDeviceManagement.repository.DeviceRepository;
 import usol.group_4.ITDeviceManagement.repository.OwnerRepository;
+import usol.group_4.ITDeviceManagement.repository.UserRepository;
 import usol.group_4.ITDeviceManagement.service.IDeviceService;
 import usol.group_4.ITDeviceManagement.service.IQRService;
 import usol.group_4.ITDeviceManagement.service.IUserService;
@@ -49,6 +50,8 @@ public class DeviceServiceImpl implements IDeviceService {
     private ModelMapper modelMapper;
     @Autowired
     private IQRService qrService;
+    @Autowired
+    private UserRepository userRepository ;
 
     private final PageResponseConverter<DeviceResponse> pageResponseConverter;
 
@@ -290,8 +293,9 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public DeviceResponse setDeviceForOwner(DeviceUserRequest deviceUserRequest) {
         Device device = deviceRepository.findBySerialNumber(deviceUserRequest.getSerial_number());
-        Optional<Owner> owner = ownerRepository.findById(deviceUserRequest.getOwner_id());
-
+        // xử lý giao sang người dùng
+//        Optional<Owner> owner = ownerRepository.findById(deviceUserRequest.getOwner_id());
+        Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id()) ;
         if (owner.isEmpty()) {
             throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_OWNER.getMessage());
         }
@@ -301,7 +305,7 @@ public class DeviceServiceImpl implements IDeviceService {
         if (device.getOwner_id() != null && !device.getOwner_id().isEmpty()) {
             throw new CustomResponseException(HttpStatus.CONFLICT, ErrorCode.USED_DEVICE.getMessage());
         }
-        device.setOwner_id(deviceUserRequest.getOwner_id());
+        device.setUser(owner.get());
         device.setStatus(StatusDevice.DA_SU_DUNG.name());
 
         String qrCodeString = getQrCodeText(owner, device);
@@ -326,14 +330,15 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public DeviceResponse transferUsedDevice(DeviceUserRequest deviceUserRequest) {
         Device device = deviceRepository.findBySerialNumber(deviceUserRequest.getSerial_number());
-        Optional<Owner> owner = ownerRepository.findById(deviceUserRequest.getOwner_id());
+        // User
+        Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id()) ;
         if (owner.isEmpty()) {
             throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_OWNER.getMessage());
         }
         if (device.getSerialNumber().isEmpty()) {
             throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_DEVICE.getMessage());
         }
-        device.setOwner_id(deviceUserRequest.getOwner_id());
+        device.setUser(owner.get());
         String qrCodeText = getQrCodeText(owner, device);
         byte[] qrCodeImage = null;
         try {
@@ -353,7 +358,7 @@ public class DeviceServiceImpl implements IDeviceService {
         if (device.getSerialNumber().isEmpty()) {
             throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_DEVICE.getMessage());
         }
-        device.setOwner_id(null);
+        device.setUser(null);
         device.setStatus(StatusDevice.CHUA_SU_DUNG.name());
 
         String qrCodeText = getQrCodeText(device);
@@ -373,8 +378,8 @@ public class DeviceServiceImpl implements IDeviceService {
         if (to.before(from))
             throw new CustomResponseException(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_DATE_COMPARISON.getMessage());
     }
-    private String getQrCodeText(Optional<Owner> ownerById, Device device) {
-        String ownerName = ownerById.get().getName();
+    private String getQrCodeText(Optional<User> ownerById, Device device) {
+        String ownerName = ownerById.get().getLastname() + ownerById.get().getFirstname();
         String qrCodeText = String.format(
                 "Accounting code: %s \n" + "Location: %s \n" + "Notes: %s \n" + "Specification: %s \n" + "Category: %s \n" + "Owner: %s \n",
                 device.getAccountingCode(),

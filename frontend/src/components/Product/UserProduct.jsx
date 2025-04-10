@@ -162,13 +162,14 @@ const UserProduct = () => {
   const handleSearch = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/v1/owners/${username}`,
+        `http://localhost:8080/api/v1/user/getUserDevice/${username}`,
         {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
         }
       );
+      console.log(response.data.data) ; 
       setUserInfo(response.data.data);
       if (response.data.data.length > 0) {
         handleAlert("Thành công", "", "success", "OK");
@@ -424,6 +425,13 @@ const UserProduct = () => {
       showAlert("Có lỗi khi tìm dữ liệu !!");
     }
   };
+  const { 
+    email = "Chưa có dữ liệu", 
+    name = "Chưa có dữ liệu", 
+    phone = "Chưa có dữ liệu", 
+    id = "Chưa có dữ liệu", 
+    listDevice = [], 
+  } = userInfo || {};
   return (
     <AnimatedCard animationType={"slideUp"} duration={0.5}>
       <div className="flex h-screen">
@@ -472,7 +480,6 @@ const UserProduct = () => {
                     <p style={{ color: "red" }}>{usernameError}</p>
                   )}
                 </div>
-                {userInfo?.length > 0 ? (
                   <div className="flex justify-between mt-5 mx-auto w-11/12">
                     <div className="flex flex-col">
                       <h1 className="text-2xl font-bold">
@@ -482,17 +489,17 @@ const UserProduct = () => {
                         <span className="text-xl font-bold">
                           Mã nhân viên:{" "}
                         </span>
-                        {userInfo?.length > 0 ? userInfo[0][1] : "..."}
+                        {id}
                       </p>
                       <p className="p-4 text-xl font-normal text-gray-700 dark:text-gray-400">
                         <span className="text-xl font-bold">
                           Tên nhân viên:{" "}
                         </span>
-                        {userInfo?.length > 0 ? userInfo[0][0] : "..."}
+                        {name}
                       </p>
                       <p className="p-4 text-xl font-normal text-gray-700 dark:text-gray-400">
-                        <span className="text-xl font-bold">Phòng ban: </span>
-                        {userInfo?.length > 0 ? userInfo[0][3] : "..."}
+                        <span className="text-xl font-bold">Phòng ban: dev</span>
+                        {/* {userInfo?.length > 0 ? userInfo[0][3] : "..."} */}
                       </p>
                     </div>
 
@@ -511,14 +518,14 @@ const UserProduct = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {userInfo ? (
-                              userInfo.map((device, index) => (
+                          {listDevice.length > 0 ? (
+                            listDevice.map((device, index) => (
                                 <tr key={index}>
                                   <td className="text-lg border px-4 py-2 text-center">
                                     {index + 1}
                                   </td>
                                   <td className="text-lg border px-4 py-2 text-center">
-                                    {device[2]}
+                                    {device}
                                   </td>
                                 </tr>
                               ))
@@ -530,9 +537,7 @@ const UserProduct = () => {
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <></>
-                )}
+    
               </div>
 
               <hr className="mt-4" />
