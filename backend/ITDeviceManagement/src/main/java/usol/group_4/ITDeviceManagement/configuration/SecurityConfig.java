@@ -41,6 +41,10 @@ public class SecurityConfig {
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/user/**","/api/notifications/**")
                 .hasRole(Role.ADMIN.name())
+                .antMatchers("/api/v1/requests/my-requests", "/api/v1/requests/create", "/api/v1/requests/{requestId}")
+                .hasRole(Role.STAFF.name()) // Dành cho Staff
+                .antMatchers("/api/v1/requests/**")
+                .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name()) // Dành cho Admin/Manager
                 .anyRequest().authenticated().and()
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder)
                         .jwtAuthenticationConverter(jwtAuthenticationConverter())).authenticationEntryPoint(new JwtAuthenticationEntryPoint())).csrf().disable();
