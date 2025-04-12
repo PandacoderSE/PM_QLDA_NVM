@@ -726,6 +726,7 @@ const UserrManagement = () => {
                             >
                               <option value="ADMIN">ADMIN</option>
                               <option value="MANAGE">MANAGE</option>
+                              <option value="STAFF">STAFF</option>
                             </select>
                           </div>
 

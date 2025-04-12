@@ -15,10 +15,13 @@ import org.springframework.web.server.ResponseStatusException;
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.UserUseDevice;
+import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.entity.Device;
+import usol.group_4.ITDeviceManagement.entity.DeviceAssignment;
 import usol.group_4.ITDeviceManagement.entity.Role;
 import usol.group_4.ITDeviceManagement.entity.User;
 import usol.group_4.ITDeviceManagement.exception.ErrorCode;
+import usol.group_4.ITDeviceManagement.repository.DeviceAssignmentRepository;
 import usol.group_4.ITDeviceManagement.repository.RoleRepository;
 import usol.group_4.ITDeviceManagement.repository.UserRepository;
 import usol.group_4.ITDeviceManagement.service.IUserService;
@@ -39,6 +42,8 @@ public class UserServiceImpl implements IUserService {
     private RoleRepository roleRepository ;
     @Autowired
     private PasswordEncoder passwordEncoder ;
+    @Autowired
+    private DeviceAssignmentRepository deviceAssignmentRepository ;
     @Override
     @Transactional
     public UserResponse createUser(UserRequest user) {
@@ -52,7 +57,7 @@ public class UserServiceImpl implements IUserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, ErrorCode.EXISTING_USER.getMessage());}
         List<Role> roles = new ArrayList<>();
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            roles.add(roleRepository.findByName("MANAGE"));
+            roles.add(roleRepository.findByName("STAFF"));
         } else {
             for (String item : user.getRoles()) {
                 Role role = roleRepository.findByName(item);
@@ -82,25 +87,29 @@ public class UserServiceImpl implements IUserService {
     @Override
     public UserUseDevice getUserDevice(String un) {
         Optional<User> optionalUser = userRepository.findById(un);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            List<String> seriDevice = new ArrayList<>() ;
-            for(Device x : user.getDevices()){
-                seriDevice.add(x.getSerialNumber()) ;
-            }
-
-            return UserUseDevice.builder()
-                    .id(user.getId())
-                    .name(user.getLastname() + " " + user.getFirstname())
-                    .email(user.getEmail())
-                    .phone(user.getPhone())
-                    .status(user.getStatus())
-                    .listDevice(seriDevice)
-                    .build();
-        } else {
-            // Xử lý trường hợp không tìm thấy user
+        if (optionalUser.isEmpty()) {
             throw new RuntimeException("User not found with id: " + un);
         }
+        User user = optionalUser.get();
+
+        // 2. Tìm tất cả bản ghi gán của người dùng với trạng thái ASSIGNED
+        List<DeviceAssignment> assignments = deviceAssignmentRepository.findByToUserIdAndStatus(user.getId(), AssignmentStatus.ASSIGNED);
+
+        // 3. Lấy danh sách serialNumber của các thiết bị
+        List<String> seriDevice = new ArrayList<>();
+        for (DeviceAssignment assignment : assignments) {
+            seriDevice.add(assignment.getDevice().getSerialNumber());
+        }
+
+        // 4. Tạo và trả về đối tượng UserUseDevice
+        return UserUseDevice.builder()
+                .id(user.getId())
+                .name(user.getLastname() + " " + user.getFirstname())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .status(user.getStatus())
+                .listDevice(seriDevice)
+                .build();
     }
 
     @Override

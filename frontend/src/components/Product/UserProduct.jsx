@@ -112,7 +112,7 @@ const UserProduct = () => {
   };
   // Kết thúc mỗi khi trạng thái thiết bị thay đổi, thì toàn bộ các checkbox được chọn sẽ hết check
 
-  // API get danh sách thiết bị theo trạng thái : "DA SU DUNG" // "CHUA SU DUNG"
+  // API get danh sách thiết bị theo trạng thái : "DA SU DUNG" // "CHUA SU DUNG" // "chờ sử dụng"
   const fetchDevices = async (status) => {
     try {
       const response = await axios.get(
@@ -243,7 +243,7 @@ const UserProduct = () => {
       handleAlert("Thành công", "Bàn giao thiết bị thành công !", "success", "OK")
       setSelectedDevices([]);
       handleSearch();
-      fetchDevices("DA_SU_DUNG");
+      fetchDevices("CHO_SU_DUNG");
     } catch (error) {
       if (error.response && error.response.status === 409) {
         if (userInfo.some((user) => user[2] === selectedDevices[0])) {
@@ -336,6 +336,7 @@ const UserProduct = () => {
       setCategoryId("");
       setSelectedDevices([]);
     }
+    console.log(response.data) ; 
     setDeviceList(response.data);
     setSelectedDevices([]);
   };
@@ -699,6 +700,12 @@ const UserProduct = () => {
                                     >
                                       Chưa sử dụng
                                     </option>
+                                    <option
+                                      selected={status === "CHO_XAC_NHAN"}
+                                      value="CHO_XAC_NHAN"
+                                    >
+                                      Chờ xác nhận
+                                    </option>
                                   </select>
                                   <MdArrowDropDown
                                     className="absolute top-1/2 transform -translate-y-1/2 right-0 flex items-center pointer-events-none"
@@ -798,7 +805,7 @@ const UserProduct = () => {
                               {/* <th scope="col" className="px-6 py-3">
                               Ngày mua
                             </th> */}
-                              {deviceList[0][5] === "DA_SU_DUNG" ? (
+                              {deviceList[0][5] === "DA_SU_DUNG" || deviceList[0][5] === "CHO_XAC_NHAN" ? (
                                 <th scope="col" className="px-4 py-3">
                                   Mã nhân viên sử dụng
                                 </th>
@@ -861,15 +868,19 @@ const UserProduct = () => {
                                   )}
                                 </td>
                                 <td className="px-4 py-4">
-                                  {device[5] == "DA_SU_DUNG" ? (
-                                    <span className="text-green-500 font-bold ">
-                                      Đã sử dụng
-                                    </span>
-                                  ) : (
-                                    <span className="text-red-500 font-bold">
-                                      Chưa sử dụng
-                                    </span>
-                                  )}
+                                {device[5] === "DA_SU_DUNG" ? (
+                                  <span className="text-green-500 font-bold">
+                                    Đã sử dụng
+                                  </span>
+                                ) : device[5] === "CHO_XAC_NHAN" ? (
+                                  <span className="text-yellow-500 font-bold">
+                                    Chờ xác nhận
+                                  </span>
+                                ) : (
+                                  <span className="text-red-500 font-bold">
+                                    Chưa sử dụng
+                                  </span>
+                                )}
                                 </td>
                               </tr>
                             ))}

@@ -15,23 +15,18 @@ import usol.group_4.ITDeviceManagement.DTO.request.DeviceUpdateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUserRequest;
 import usol.group_4.ITDeviceManagement.DTO.response.DeviceResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.PageResponse;
-import usol.group_4.ITDeviceManagement.constant.DeviceStatus;
+import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.constant.StatusDevice;
 import usol.group_4.ITDeviceManagement.converter.PageResponseConverter;
-import usol.group_4.ITDeviceManagement.entity.Category;
-import usol.group_4.ITDeviceManagement.entity.Device;
-import usol.group_4.ITDeviceManagement.entity.Owner;
-import usol.group_4.ITDeviceManagement.entity.User;
+import usol.group_4.ITDeviceManagement.entity.*;
 import usol.group_4.ITDeviceManagement.exception.CustomResponseException;
 import usol.group_4.ITDeviceManagement.exception.ErrorCode;
-import usol.group_4.ITDeviceManagement.repository.CategoryRepository;
-import usol.group_4.ITDeviceManagement.repository.DeviceRepository;
-import usol.group_4.ITDeviceManagement.repository.OwnerRepository;
-import usol.group_4.ITDeviceManagement.repository.UserRepository;
+import usol.group_4.ITDeviceManagement.repository.*;
 import usol.group_4.ITDeviceManagement.service.IDeviceService;
 import usol.group_4.ITDeviceManagement.service.IQRService;
 import usol.group_4.ITDeviceManagement.service.IUserService;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +47,8 @@ public class DeviceServiceImpl implements IDeviceService {
     private IQRService qrService;
     @Autowired
     private UserRepository userRepository ;
-
+    @Autowired
+    private DeviceAssignmentRepository deviceAssignmentRepository ;
     private final PageResponseConverter<DeviceResponse> pageResponseConverter;
 
     @Override
@@ -90,8 +86,7 @@ public class DeviceServiceImpl implements IDeviceService {
         User user = userService.getCurrentUser();
 
 
-        device.setCategory(category);
-        device.setUser(user);
+        device.setCategory(category) ;
         device.setOwner_id("");
         String ownerName = "";
         if (device.getOwner_id() != null && device.getOwner_id() != "") {
@@ -260,8 +255,6 @@ public class DeviceServiceImpl implements IDeviceService {
 
     private DeviceResponse mapToResponse(Device device) {
         var response = modelMapper.map(device, DeviceResponse.class);
-        Optional.ofNullable(response.getUser()).ifPresent(user -> user.setDevices(null));
-        Optional.ofNullable(response.getUser()).ifPresent(user -> user.setRoles(null));
         Optional.ofNullable(response.getCategory()).ifPresent(user -> user.setDevices(null));
         return response;
     }
@@ -295,30 +288,43 @@ public class DeviceServiceImpl implements IDeviceService {
         Device device = deviceRepository.findBySerialNumber(deviceUserRequest.getSerial_number());
         // xử lý giao sang người dùng
 //        Optional<Owner> owner = ownerRepository.findById(deviceUserRequest.getOwner_id());
-        Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id()) ;
+        // 2. Tìm người dùng dựa trên owner_id
+        Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id());
         if (owner.isEmpty()) {
             throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_OWNER.getMessage());
         }
-        if (device.getSerialNumber().isEmpty()) {
-            throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_DEVICE.getMessage());
-        }
-        if (device.getOwner_id() != null && !device.getOwner_id().isEmpty()) {
+
+        // 3. Kiểm tra xem thiết bị đã được gán cho người dùng nào chưa
+        List<DeviceAssignment> assignments = deviceAssignmentRepository.findByDeviceIdOrderByHandoverDateDesc(device.getId());
+        if (!assignments.isEmpty() && assignments.get(0).getStatus() == AssignmentStatus.ASSIGNED) {
             throw new CustomResponseException(HttpStatus.CONFLICT, ErrorCode.USED_DEVICE.getMessage());
         }
-        device.setUser(owner.get());
-        device.setStatus(StatusDevice.DA_SU_DUNG.name());
 
+        // 4. Tạo bản ghi gán thiết bị trong DeviceAssignment
+        DeviceAssignment assignment = DeviceAssignment.builder()
+                .device(device)
+                .toUser(owner.get())
+                .quantity(1) // Giả sử quantity là 1, bạn có thể lấy từ request nếu cần
+                .handoverDate(LocalDateTime.now())
+                .status(AssignmentStatus.PENDING)
+                .build();
+        deviceAssignmentRepository.save(assignment);
+
+        // 5. Cập nhật trạng thái thiết bị
+        device.setStatus(StatusDevice.CHO_XAC_NHAN.name());
+
+        // 6. Tạo mã QR và lưu vào identifyCode
         String qrCodeString = getQrCodeText(owner, device);
-        byte[] qrCodeImage = null;
+        byte[] qrCodeImage;
         try {
             qrCodeImage = qrService.generateQRCode(qrCodeString, 300, 300);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to generate QR code", e);
         }
         String qrCodeBase64 = qrService.generateQRCodeBase64(qrCodeImage);
         device.setIdentifyCode(qrCodeBase64);
 
-
+        // 7. Lưu thiết bị và trả về response
         return mapToResponse(deviceRepository.save(device));
     }
 
@@ -330,24 +336,32 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public DeviceResponse transferUsedDevice(DeviceUserRequest deviceUserRequest) {
         Device device = deviceRepository.findBySerialNumber(deviceUserRequest.getSerial_number());
-        // User
-        Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id()) ;
-        if (owner.isEmpty()) {
-            throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_OWNER.getMessage());
-        }
-        if (device.getSerialNumber().isEmpty()) {
-            throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_DEVICE.getMessage());
-        }
-        device.setUser(owner.get());
-        String qrCodeText = getQrCodeText(owner, device);
-        byte[] qrCodeImage = null;
-        try {
-            qrCodeImage = qrService.generateQRCode(qrCodeText, 300, 300);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        String qrCodeBase64 = qrService.generateQRCodeBase64(qrCodeImage);
-        device.setIdentifyCode(qrCodeBase64);
+        // xử lý giao sang người dùng
+//        Optional<Owner> owner = ownerRepository.findById(deviceUserRequest.getOwner_id());
+//        Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id()) ;
+//        if (owner.isEmpty()) {
+//            throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_OWNER.getMessage());
+//        }
+//        if (device.getSerialNumber().isEmpty()) {
+//            throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_DEVICE.getMessage());
+//        }
+//        if (device.getOwner_id() != null && !device.getOwner_id().isEmpty()) {
+//            throw new CustomResponseException(HttpStatus.CONFLICT, ErrorCode.USED_DEVICE.getMessage());
+//        }
+//        device.setUser(owner.get());
+//        device.setStatus(StatusDevice.DA_SU_DUNG.name());
+//
+//        String qrCodeString = getQrCodeText(owner, device);
+//        byte[] qrCodeImage = null;
+//        try {
+//            qrCodeImage = qrService.generateQRCode(qrCodeString, 300, 300);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//        String qrCodeBase64 = qrService.generateQRCodeBase64(qrCodeImage);
+//        device.setIdentifyCode(qrCodeBase64);
+
+
         return mapToResponse(deviceRepository.save(device));
     }
 
@@ -358,20 +372,35 @@ public class DeviceServiceImpl implements IDeviceService {
         if (device.getSerialNumber().isEmpty()) {
             throw new CustomResponseException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_DEVICE.getMessage());
         }
-        device.setUser(null);
+        // 2. Tìm bản ghi gán mới nhất trong DeviceAssignment
+        Optional<DeviceAssignment> assignmentOpt = deviceAssignmentRepository.findTopByDeviceIdOrderByHandoverDateDesc(device.getId());
+        if (assignmentOpt.isEmpty() || assignmentOpt.get().getStatus() != AssignmentStatus.ASSIGNED) {
+            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Device is not currently assigned to any user");
+        }
+
+        // 3. Xóa bản ghi gán trong DeviceAssignment
+        DeviceAssignment currentAssignment = assignmentOpt.get();
+        deviceAssignmentRepository.delete(currentAssignment);
+
+
+        // 5. Cập nhật trạng thái thiết bị
         device.setStatus(StatusDevice.CHUA_SU_DUNG.name());
 
+        // 6. Tạo mã QR mới và lưu vào identifyCode
         String qrCodeText = getQrCodeText(device);
-        byte[] qrCodeImage = null;
+        byte[] qrCodeImage;
         try {
             qrCodeImage = qrService.generateQRCode(qrCodeText, 300, 300);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to generate QR code", e);
         }
         String qrCodeBase64 = qrService.generateQRCodeBase64(qrCodeImage);
         device.setIdentifyCode(qrCodeBase64);
+
+        // 7. Lưu thiết bị và trả về response
         return mapToResponse(deviceRepository.save(device));
     }
+
 
     private void validateDateCompare(Date from, Date to) {
         if (from == null || to == null) return;
@@ -403,6 +432,26 @@ public class DeviceServiceImpl implements IDeviceService {
         );
         return qrCodeText;
     }
+    // hàm user xác nhận vật tư
+    @Override
+    public DeviceResponse approveDeviceAssignment(String userId, Long deviceId) {
+        Optional<DeviceAssignment> assignmentOpt = deviceAssignmentRepository
+                .findTopByDeviceIdAndToUserIdAndStatusOrderByHandoverDateDesc(deviceId, userId, AssignmentStatus.PENDING);
+        if (assignmentOpt.isEmpty()) {
+            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "No pending assignment found for this user and device");
+        }
 
+        // 2. Cập nhật trạng thái của DeviceAssignment thành ASSIGNED
+        DeviceAssignment assignment = assignmentOpt.get();
+        assignment.setStatus(AssignmentStatus.ASSIGNED);
+        deviceAssignmentRepository.save(assignment);
 
+        // 3. Cập nhật trạng thái thiết bị thành IN_USE
+        Device device = assignment.getDevice();
+        device.setStatus(StatusDevice.DA_SU_DUNG.name());
+        deviceRepository.save(device);
+
+        // 5. Trả về response
+        return mapToResponse(device);
+    }
 }

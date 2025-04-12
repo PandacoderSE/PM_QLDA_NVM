@@ -43,4 +43,5 @@ public interface IDeviceService {
     public DeviceResponse transferUsedDevice(DeviceUserRequest deviceUserRequest);
 
     public DeviceResponse transferEmptyStatusDevice(String serialNumber);
+    DeviceResponse approveDeviceAssignment(String userId, Long deviceId);
 }

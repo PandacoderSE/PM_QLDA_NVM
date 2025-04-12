@@ -179,7 +179,7 @@ public class DeviceController {
     public ApiResponse<?> getDeviceBySerialNumber(@PathVariable String serialNumber) {
         return ApiResponse.builder().success(true).message("Get successfully").data(deviceService.getDeviceBySerialNum(serialNumber)).build();
     }
-
+    // hàm bàn giao
     @PostMapping("/set-device")
     public ApiResponse<?> setOwnerIdForDevice(@RequestBody DeviceUserRequest deviceUserRequest) {
         return ApiResponse.builder().success(true).message("Get successfully").data(deviceService.setDeviceForOwner(deviceUserRequest)).build();
@@ -199,6 +199,13 @@ public class DeviceController {
     public ApiResponse<?> transferUsedDevice(@PathVariable String serialNumber) {
         return ApiResponse.builder().success(true).message("Get successfully").data(deviceService.transferEmptyStatusDevice(serialNumber)).build();
     }
-
+    // ng dùng click approve thì mới là assigned
+    @PostMapping("/approve-assignment")
+    public ApiResponse<?> approveDeviceAssignment(
+            @RequestParam String userId,
+            @RequestParam Long deviceId) {
+        DeviceResponse response = deviceService.approveDeviceAssignment(userId, deviceId);
+        return ApiResponse.builder().success(true).message("Get successfully").data(response).build();
+    }
 
 }
