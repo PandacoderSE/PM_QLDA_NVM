@@ -30,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeRequests().antMatchers(PUBLIC_ENDPOINTS).permitAll()
                 .antMatchers("/api/v1/user/myInfo", "/api/v1/user/updateProfile", "/api/v1/user/updatePassword","/api/v1/user/getRoleByUser", "/api/v1/auth/introspect", "/api/v1/auth/logout")
-                .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
+                .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name(), Role.STAFF.name())
                 .antMatchers("/api/v1/categories/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/owners/**")
