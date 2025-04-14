@@ -8,13 +8,17 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceCreateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceListRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUpdateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUserRequest;
+import usol.group_4.ITDeviceManagement.DTO.response.DeviceAssignmentResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.DeviceResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.PageResponse;
+import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
 import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.constant.StatusDevice;
 import usol.group_4.ITDeviceManagement.converter.PageResponseConverter;
@@ -26,6 +30,7 @@ import usol.group_4.ITDeviceManagement.service.IDeviceService;
 import usol.group_4.ITDeviceManagement.service.IQRService;
 import usol.group_4.ITDeviceManagement.service.IUserService;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -434,24 +439,100 @@ public class DeviceServiceImpl implements IDeviceService {
     }
     // hàm user xác nhận vật tư
     @Override
-    public DeviceResponse approveDeviceAssignment(String userId, Long deviceId) {
-        Optional<DeviceAssignment> assignmentOpt = deviceAssignmentRepository
-                .findTopByDeviceIdAndToUserIdAndStatusOrderByHandoverDateDesc(deviceId, userId, AssignmentStatus.PENDING);
-        if (assignmentOpt.isEmpty()) {
-            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "No pending assignment found for this user and device");
+    public List<DeviceResponse> approveDeviceAssignment(List<Long> deviceIds) {
+        List<DeviceResponse> res = new ArrayList<>() ;
+        for ( Long deviceId : deviceIds) {
+            Optional<DeviceAssignment> assignmentOpt = deviceAssignmentRepository
+                    .findTopByDeviceIdAndToUserIdAndStatusOrderByHandoverDateDesc(deviceId,getMyInfo().getId(), AssignmentStatus.PENDING);
+            if (assignmentOpt.isEmpty()) {
+                throw new CustomResponseException(HttpStatus.BAD_REQUEST, "No pending assignment found for this user and device");
+            }
+
+            // 2. Cập nhật trạng thái của DeviceAssignment thành ASSIGNED
+            DeviceAssignment assignment = assignmentOpt.get();
+            assignment.setStatus(AssignmentStatus.ASSIGNED);
+            deviceAssignmentRepository.save(assignment);
+
+            // 3. Cập nhật trạng thái thiết bị thành IN_USE
+            Device device = assignment.getDevice();
+            device.setStatus(StatusDevice.DA_SU_DUNG.name());
+            deviceRepository.save(device);
+            DeviceResponse ad =  mapToResponse(device) ;
+            res.add(ad) ;
         }
-
-        // 2. Cập nhật trạng thái của DeviceAssignment thành ASSIGNED
-        DeviceAssignment assignment = assignmentOpt.get();
-        assignment.setStatus(AssignmentStatus.ASSIGNED);
-        deviceAssignmentRepository.save(assignment);
-
-        // 3. Cập nhật trạng thái thiết bị thành IN_USE
-        Device device = assignment.getDevice();
-        device.setStatus(StatusDevice.DA_SU_DUNG.name());
-        deviceRepository.save(device);
-
         // 5. Trả về response
-        return mapToResponse(device);
+        return res;
+    }
+    public List<DeviceAssignmentResponse> getAssignmentsByUserId(AssignmentStatus status, String serialNumber) {
+        List<DeviceAssignment> assignments = deviceAssignmentRepository
+                .findAssignmentsByUserIdAndFilters(getMyInfo().getId(), status, serialNumber);
+
+        return assignments.stream()
+                .map(da -> DeviceAssignmentResponse.builder()
+                        .id(da.getId())
+                        .deviceId(da.getDevice().getId())
+                        .serialNumber(da.getDevice().getSerialNumber())
+                        .manufacturer(da.getDevice().getManufacture())
+                        .userId(da.getToUser().getId())
+                        .quantity(da.getQuantity())
+                        .handoverDate(da.getHandoverDate())
+                        .status(da.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DeviceAssignmentResponse rejectDeviceAssignment(Long assignmentId) {
+        DeviceAssignment assignment = deviceAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bản ghi bàn giao với ID: " + assignmentId));
+        // Lưu thông tin trước khi xóa để trả về
+        Device device = deviceRepository.findBySerialNumber(assignment.getDevice().getSerialNumber());
+        device.setStatus(StatusDevice.CHUA_SU_DUNG.name());
+        deviceRepository.save(device) ;
+        DeviceAssignmentResponse response = DeviceAssignmentResponse.builder()
+                .id(assignment.getId())
+                .deviceId(assignment.getDevice().getId())
+                .serialNumber(assignment.getDevice().getSerialNumber())
+                .manufacturer(assignment.getDevice().getManufacture())
+                .userId(assignment.getToUser().getId())
+                .quantity(assignment.getQuantity())
+                .handoverDate(assignment.getHandoverDate())
+                .status(AssignmentStatus.REJECTED) // Trạng thái trước khi xóa
+                .build();
+
+        // Xóa bản ghi
+        deviceAssignmentRepository.delete(assignment);
+        return response;
+    }
+
+    @Override
+    public DeviceAssignmentResponse returnDeviceAssignment(Long assignmentId) {
+        DeviceAssignment assignment = deviceAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bản ghi bàn giao với ID: " + assignmentId));
+
+        // Cập nhật trạng thái
+        assignment.setStatus(AssignmentStatus.RETURNED);
+        DeviceAssignment updatedAssignment = deviceAssignmentRepository.save(assignment);
+        Device device = deviceRepository.findBySerialNumber(updatedAssignment.getDevice().getSerialNumber());
+        device.setStatus(StatusDevice.CHUA_SU_DUNG.name());
+        deviceRepository.save(device) ;
+        // Trả về thông tin bản ghi đã cập nhật
+        return DeviceAssignmentResponse.builder()
+                .id(updatedAssignment.getId())
+                .deviceId(updatedAssignment.getDevice().getId())
+                .serialNumber(updatedAssignment.getDevice().getSerialNumber())
+                .manufacturer(updatedAssignment.getDevice().getManufacture())
+                .userId(updatedAssignment.getToUser().getId())
+                .quantity(updatedAssignment.getQuantity())
+                .handoverDate(updatedAssignment.getHandoverDate())
+                .status(updatedAssignment.getStatus())
+                .build();
+    }
+
+    public User getMyInfo() {
+        var context = SecurityContextHolder.getContext() ;
+        String name = context.getAuthentication().getName() ;
+        User user = Optional.ofNullable(userRepository.findByUsername(name)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_USER.getMessage()));
+        return user ;
     }
 }
