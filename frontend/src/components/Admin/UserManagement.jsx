@@ -354,7 +354,7 @@ const UserrManagement = () => {
     <>
       <div>
         <AnimatedCard animationType={"slideUp"} duration={0.5}>
-          <main>
+          <main className="p-4">
             <h3 className="text-center font-bold text-2xl">
               {t("list-users")}
             </h3>

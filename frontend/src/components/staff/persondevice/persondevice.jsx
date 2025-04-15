@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { getToken } from "../../Services/localStorageService";
 import Pagination_T from "../../Default/Pagination";
+import Swal from "sweetalert2";
+import handleAlert from "../../Alert/handleAlert";
 const Persondevice = () => {
   const [assignments, setAssignments] = useState([]);
   const [serialNumber, setSerialNumber] = useState("");
   const [status, setStatus] = useState("");
   const [selectedDevices, setSelectedDevices] = useState([]); // Danh sách deviceId được chọn
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(2);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const handlePageClick = (data) => {
     setCurrentPage(data.selected);
   };
@@ -92,58 +94,61 @@ const Persondevice = () => {
   };
 
   // Từ chối bàn giao
-  const handleReject = async (assignmentId) => {
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/api/v1/devices/assignments/reject?assignmentId=${assignmentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (response.data.success) {
-        alert("Đã từ chối bàn giao!");
-        fetchAssignments();
-      } else {
-        alert("Lỗi khi từ chối!");
+  // Từ chối bàn giao
+const handleReject = async (assignmentId) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8080/api/v1/devices/assignments/reject?assignmentId=${assignmentId}`,
+      {}, // Payload rỗng vì dữ liệu đã nằm trong query parameter
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    } catch (err) {
-      if (err.response?.status === 403) {
-        alert("Bạn không có quyền từ chối!");
-      } else {
-        console.error("Lỗi API:", err);
-        alert("Lỗi khi từ chối!");
-      }
+    );
+    if (response.data.success) {
+      handleAlert.fire("Thành công", "Đã từ chối bàn giao!", "success");
+      fetchAssignments();
+    } else {
+      handleAlert.fire("Lỗi", "Lỗi khi từ chối!", "error");
     }
-  };
+  } catch (err) {
+    if (err.response?.status === 403) {
+      handleAlert.fire("Lỗi", "Bạn không có quyền từ chối!", "error");
+    } else {
+      console.error("Lỗi API:", err);
+      handleAlert.fire("Lỗi", "Lỗi khi từ chối!", "error");
+    }
+  }
+};
 
-  // Trả lại vật tư
-  const handleReturn = async (assignmentId) => {
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/api/v1/devices/assignments/return?assignmentId=${assignmentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (response.data.success) {
-        alert("Đã trả lại vật tư!");
-        fetchAssignments();
-      } else {
-        alert("Lỗi khi trả lại!");
+// Trả lại vật tư
+const handleReturn = async (assignmentId) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:8080/api/v1/devices/assignments/return?assignmentId=${assignmentId}`,
+      {}, // Payload rỗng vì dữ liệu đã nằm trong query parameter
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    } catch (err) {
-      if (err.response?.status === 403) {
-        alert("Bạn không có quyền trả lại!");
-      } else {
-        console.error("Lỗi API:", err);
-        alert("Lỗi khi trả lại!");
-      }
+    );
+    if (response.data.success) {
+      handleAlert.fire("Thành công", "Đã trả lại vật tư!", "success");
+      fetchAssignments();
+    } else {
+      handleAlert.fire("Lỗi", "Lỗi khi trả lại!", "error");
     }
-  };
+  } catch (err) {
+    if (err.response?.status === 403) {
+      handleAlert.fire("Lỗi", "Bạn không có quyền trả lại!", "error");
+    } else {
+      console.error("Lỗi API:", err);
+      handleAlert.fire("Lỗi", "Lỗi khi trả lại!", "error");
+    }
+  }
+};
 
   return (
     <div className="p-4">
