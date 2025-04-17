@@ -2,6 +2,7 @@ package usol.group_4.ITDeviceManagement.service;
 
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
+import usol.group_4.ITDeviceManagement.DTO.response.UserUseDevice;
 import usol.group_4.ITDeviceManagement.entity.User;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 public interface IUserService {
     UserResponse createUser(UserRequest user) ;
     UserResponse getUser(String un) ;
+    UserUseDevice getUserDevice(String un) ;
     User getCurrentUser();
     List<UserResponse> getAlls() ;
     UserResponse getMyInfo() ;

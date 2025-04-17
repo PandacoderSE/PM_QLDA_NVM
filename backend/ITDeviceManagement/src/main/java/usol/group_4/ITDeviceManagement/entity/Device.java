@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -34,17 +35,10 @@ public class Device extends Auditable{
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "create_by")
-    private User user;
     private String status;
 	private String owner_id;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "owner_id")
-//    private Owner owner;
-
-//    @OneToMany(mappedBy = "deviceqr", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
-//    private List<QRCode> qrcodes;
+    @OneToMany(mappedBy = "device", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<DeviceAssignment> deviceAssignments = new ArrayList<>();
 
 }

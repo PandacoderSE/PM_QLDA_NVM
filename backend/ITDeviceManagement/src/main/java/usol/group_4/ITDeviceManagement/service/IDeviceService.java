@@ -1,11 +1,14 @@
 package usol.group_4.ITDeviceManagement.service;
 
+import org.springframework.core.io.FileSystemResource;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceCreateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceListRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUpdateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUserRequest;
+import usol.group_4.ITDeviceManagement.DTO.response.DeviceAssignmentResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.DeviceResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.PageResponse;
+import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.entity.Device;
 
 import java.util.Date;
@@ -43,4 +46,12 @@ public interface IDeviceService {
     public DeviceResponse transferUsedDevice(DeviceUserRequest deviceUserRequest);
 
     public DeviceResponse transferEmptyStatusDevice(String serialNumber);
+    List<DeviceResponse> approveDeviceAssignment(List<Long> deviceIds);
+    List<DeviceAssignmentResponse> getAssignmentsByUserId(AssignmentStatus status, String serialNumber) ;
+    // từ chối
+    DeviceAssignmentResponse rejectDeviceAssignment(Long assignmentId) ;
+    // trả lại.
+    DeviceAssignmentResponse returnDeviceAssignment(Long assignmentId) ;
+
+    FileSystemResource downloadHandoverPdf(Long assignmentId) ;
 }

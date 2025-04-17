@@ -27,7 +27,6 @@ public class DeviceResponse {
     private LocalDateTime createdTime;
     private String notes;
     private Category category;
-    private User user;
     private String identifyCode;
     private String status;
 }
