@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/owners/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
-                .antMatchers("/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return")
+                .antMatchers("/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return", "/api/v1/devices/{assignmentId}/download-pdf")
                 .hasRole(Role.STAFF.name())
                 .antMatchers("/api/v1/devices/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())

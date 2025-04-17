@@ -2,6 +2,7 @@ package usol.group_4.ITDeviceManagement.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import usol.group_4.ITDeviceManagement.DTO.response.DeviceResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.PageResponse;
 import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.entity.Device;
+import usol.group_4.ITDeviceManagement.exception.CustomResponseException;
 import usol.group_4.ITDeviceManagement.service.IDeviceService;
 
 import java.io.ByteArrayOutputStream;
@@ -240,5 +242,21 @@ public class DeviceController {
                 .message("Assignment returned successfully")
                 .data(response)
                 .build();
+    }
+    @GetMapping("/{assignmentId}/download-pdf")
+    public ResponseEntity<?> downloadHandoverPdf(
+            @PathVariable Long assignmentId){ // Token để xác thực user
+        try {
+
+            FileSystemResource fileResource = deviceService.downloadHandoverPdf(assignmentId);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=" + fileResource.getFilename())
+                    .body(fileResource);
+        } catch (Exception e) {
+            return ResponseEntity.status(e instanceof CustomResponseException
+                            ? ((CustomResponseException) e).getStatus()
+                            : HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi tải file PDF: " + e.getMessage());
+        }
     }
 }

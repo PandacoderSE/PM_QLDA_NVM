@@ -3,6 +3,7 @@ package usol.group_4.ITDeviceManagement.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceCreateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceListRequest;
@@ -31,6 +33,7 @@ import usol.group_4.ITDeviceManagement.service.IQRService;
 import usol.group_4.ITDeviceManagement.service.IUserService;
 
 import javax.persistence.EntityNotFoundException;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,6 +57,8 @@ public class DeviceServiceImpl implements IDeviceService {
     private UserRepository userRepository ;
     @Autowired
     private DeviceAssignmentRepository deviceAssignmentRepository ;
+    @Autowired
+    private PdfService pdfService;
     private final PageResponseConverter<DeviceResponse> pageResponseConverter;
 
     @Override
@@ -291,8 +296,7 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public DeviceResponse setDeviceForOwner(DeviceUserRequest deviceUserRequest) {
         Device device = deviceRepository.findBySerialNumber(deviceUserRequest.getSerial_number());
-        // xử lý giao sang người dùng
-//        Optional<Owner> owner = ownerRepository.findById(deviceUserRequest.getOwner_id());
+
         // 2. Tìm người dùng dựa trên owner_id
         Optional<User> owner = userRepository.findById(deviceUserRequest.getOwner_id());
         if (owner.isEmpty()) {
@@ -311,10 +315,19 @@ public class DeviceServiceImpl implements IDeviceService {
                 .toUser(owner.get())
                 .quantity(1) // Giả sử quantity là 1, bạn có thể lấy từ request nếu cần
                 .handoverDate(LocalDateTime.now())
+                .handoverPerson(getMyInfo().getLastname() + " " + getMyInfo().getFirstname())
                 .status(AssignmentStatus.PENDING)
                 .build();
-        deviceAssignmentRepository.save(assignment);
-
+        DeviceAssignment savedAssignment = deviceAssignmentRepository.save(assignment);
+        // 5. Tạo biên bản bàn giao (PDF) và lưu đường dẫn vào assignment
+        try {
+            List<Device> devices = Arrays.asList(device);
+            String pdfPath = pdfService.generateHandoverPdf(savedAssignment, devices,owner.get().getFirstname(), null);
+            savedAssignment.setPdfPath(pdfPath);
+            deviceAssignmentRepository.save(savedAssignment);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate handover PDF", e);
+        }
         // 5. Cập nhật trạng thái thiết bị
         device.setStatus(StatusDevice.CHO_XAC_NHAN.name());
 
@@ -457,6 +470,16 @@ public class DeviceServiceImpl implements IDeviceService {
             Device device = assignment.getDevice();
             device.setStatus(StatusDevice.DA_SU_DUNG.name());
             deviceRepository.save(device);
+            try {
+                String receiverName = getMyInfo().getFirstname();
+
+                List<Device> devices = List.of(device);
+                String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, getMyInfo().getLastname() + " " +getMyInfo().getFirstname());
+                assignment.setPdfPath(updatedPdfPath);
+                deviceAssignmentRepository.save(assignment);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to update handover PDF", e);
+            }
             DeviceResponse ad =  mapToResponse(device) ;
             res.add(ad) ;
         }
@@ -477,10 +500,10 @@ public class DeviceServiceImpl implements IDeviceService {
                         .quantity(da.getQuantity())
                         .handoverDate(da.getHandoverDate())
                         .status(da.getStatus())
+                        .pdfPath(da.getPdfPath())
                         .build())
                 .collect(Collectors.toList());
     }
-
     @Override
     public DeviceAssignmentResponse rejectDeviceAssignment(Long assignmentId) {
         DeviceAssignment assignment = deviceAssignmentRepository.findById(assignmentId)
@@ -497,6 +520,7 @@ public class DeviceServiceImpl implements IDeviceService {
                 .userId(assignment.getToUser().getId())
                 .quantity(assignment.getQuantity())
                 .handoverDate(assignment.getHandoverDate())
+                .pdfPath(assignment.getPdfPath())
                 .status(AssignmentStatus.REJECTED) // Trạng thái trước khi xóa
                 .build();
 
@@ -526,7 +550,29 @@ public class DeviceServiceImpl implements IDeviceService {
                 .quantity(updatedAssignment.getQuantity())
                 .handoverDate(updatedAssignment.getHandoverDate())
                 .status(updatedAssignment.getStatus())
+                .pdfPath(updatedAssignment.getPdfPath())
                 .build();
+    }
+    @Override
+    public FileSystemResource downloadHandoverPdf(Long assignmentId) {
+        DeviceAssignment assignment = deviceAssignmentRepository.findById(assignmentId).get();
+        if (assignment == null) {
+            throw new CustomResponseException(HttpStatus.NOT_FOUND, "Không tìm thấy bản ghi bàn giao!");
+        }
+
+        // 3. Kiểm tra file PDF
+        String pdfPath = assignment.getPdfPath();
+        if (pdfPath == null) {
+            throw new CustomResponseException(HttpStatus.NOT_FOUND, "File PDF không tồn tại!");
+        }
+
+        File file = new File(pdfPath);
+        if (!file.exists()) {
+            throw new CustomResponseException(HttpStatus.NOT_FOUND, "File PDF không tồn tại trên server!");
+        }
+
+        // 4. Trả về file PDF dưới dạng FileSystemResource
+        return new FileSystemResource(file);
     }
 
     public User getMyInfo() {
@@ -535,4 +581,5 @@ public class DeviceServiceImpl implements IDeviceService {
         User user = Optional.ofNullable(userRepository.findByUsername(name)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorCode.NON_EXISTING_ID_USER.getMessage()));
         return user ;
     }
+
 }

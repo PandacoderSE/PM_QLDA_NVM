@@ -24,7 +24,7 @@ public class DeviceAssignment extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
-
+    private String handoverPerson ;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "to_user_id", nullable = false)
     private User toUser;
@@ -35,4 +35,6 @@ public class DeviceAssignment extends Auditable {
 
     @Enumerated(EnumType.STRING)
     private AssignmentStatus status; // Thêm trường status
+    @Column(name = "pdf_path")
+    private String pdfPath;
 }

@@ -20,5 +20,7 @@ public class DeviceAssignmentResponse {
     private String userId;
     private int quantity;
     private LocalDateTime handoverDate;
+    private String handoverPerson ;
     private AssignmentStatus status;
+    private String pdfPath;
 }

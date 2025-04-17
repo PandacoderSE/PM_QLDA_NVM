@@ -22,7 +22,6 @@ configurations {
 repositories {
 	mavenCentral()
 }
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -38,7 +37,7 @@ dependencies {
 	implementation 'org.apache.poi:poi:5.2.2'
 	implementation 'org.apache.poi:poi-ooxml:5.2.2'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
-
+	implementation 'com.itextpdf:itext7-core:7.2.5'
 	implementation 'org.hibernate.validator:hibernate-validator:6.2.0.Final'
 	implementation 'javax.validation:validation-api:2.0.1.Final'
 

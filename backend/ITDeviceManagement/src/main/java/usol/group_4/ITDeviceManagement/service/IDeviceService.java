@@ -1,5 +1,6 @@
 package usol.group_4.ITDeviceManagement.service;
 
+import org.springframework.core.io.FileSystemResource;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceCreateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceListRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUpdateRequest;
@@ -51,4 +52,6 @@ public interface IDeviceService {
     DeviceAssignmentResponse rejectDeviceAssignment(Long assignmentId) ;
     // trả lại.
     DeviceAssignmentResponse returnDeviceAssignment(Long assignmentId) ;
+
+    FileSystemResource downloadHandoverPdf(Long assignmentId) ;
 }
