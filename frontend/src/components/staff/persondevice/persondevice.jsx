@@ -343,7 +343,7 @@ const Persondevice = () => {
                           Từ chối
                         </button>
                       )}
-                      {assignment.status === "ASSIGNED" && (
+                      {(assignment.status === "ASSIGNED" ||assignment.status === "RETURNED")&& (
                         <>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "view")}
@@ -357,13 +357,15 @@ const Persondevice = () => {
                           >
                             Tải PDF
                           </button>
+                          </>
+                        )} ;
+                        {assignment.status === "ASSIGNED" && (
                           <button
                             onClick={() => handleReturn(assignment.id)}
                             className="bg-blue-500 text-white px-2 py-1 rounded"
                           >
                             Trả lại
                           </button>
-                        </>
                       )}
                     </div>
                   </td>

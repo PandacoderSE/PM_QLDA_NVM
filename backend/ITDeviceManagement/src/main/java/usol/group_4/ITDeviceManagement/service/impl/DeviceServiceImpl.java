@@ -322,7 +322,7 @@ public class DeviceServiceImpl implements IDeviceService {
         // 5. Tạo biên bản bàn giao (PDF) và lưu đường dẫn vào assignment
         try {
             List<Device> devices = Arrays.asList(device);
-            String pdfPath = pdfService.generateHandoverPdf(savedAssignment, devices,owner.get().getFirstname(), null);
+            String pdfPath = pdfService.generateHandoverPdf(savedAssignment, devices,owner.get().getFirstname(), null, null);
             savedAssignment.setPdfPath(pdfPath);
             deviceAssignmentRepository.save(savedAssignment);
         } catch (Exception e) {
@@ -392,7 +392,9 @@ public class DeviceServiceImpl implements IDeviceService {
         }
         // 2. Tìm bản ghi gán mới nhất trong DeviceAssignment
         Optional<DeviceAssignment> assignmentOpt = deviceAssignmentRepository.findTopByDeviceIdOrderByHandoverDateDesc(device.getId());
-        if (assignmentOpt.isEmpty() || assignmentOpt.get().getStatus() != AssignmentStatus.ASSIGNED) {
+        if (assignmentOpt.isEmpty() ||
+                (assignmentOpt.get().getStatus() != AssignmentStatus.ASSIGNED &&
+                        assignmentOpt.get().getStatus() != AssignmentStatus.PENDING)) {
             throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Device is not currently assigned to any user");
         }
 
@@ -474,7 +476,7 @@ public class DeviceServiceImpl implements IDeviceService {
                 String receiverName = getMyInfo().getFirstname();
 
                 List<Device> devices = List.of(device);
-                String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, getMyInfo().getLastname() + " " +getMyInfo().getFirstname());
+                String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, getMyInfo().getLastname() + " " +getMyInfo().getFirstname(), null);
                 assignment.setPdfPath(updatedPdfPath);
                 deviceAssignmentRepository.save(assignment);
             } catch (Exception e) {
@@ -525,7 +527,8 @@ public class DeviceServiceImpl implements IDeviceService {
                 .build();
 
         // Xóa bản ghi
-        deviceAssignmentRepository.delete(assignment);
+        assignment.setStatus(AssignmentStatus.REJECTED);
+        deviceAssignmentRepository.save(assignment);
         return response;
     }
 
@@ -536,21 +539,30 @@ public class DeviceServiceImpl implements IDeviceService {
 
         // Cập nhật trạng thái
         assignment.setStatus(AssignmentStatus.RETURNED);
-        DeviceAssignment updatedAssignment = deviceAssignmentRepository.save(assignment);
-        Device device = deviceRepository.findBySerialNumber(updatedAssignment.getDevice().getSerialNumber());
+//        DeviceAssignment updatedAssignment = deviceAssignmentRepository.save(assignment);
+        Device device = deviceRepository.findBySerialNumber(assignment.getDevice().getSerialNumber());
         device.setStatus(StatusDevice.CHUA_SU_DUNG.name());
         deviceRepository.save(device) ;
+        String receiverName = getMyInfo().getFirstname();
+        try {
+            List<Device> devices = List.of(device);
+            String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, getMyInfo().getLastname() + " " +getMyInfo().getFirstname(), getMyInfo().getLastname() + " " +getMyInfo().getFirstname());
+            assignment.setPdfPath(updatedPdfPath);
+            deviceAssignmentRepository.save(assignment);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update handover PDF", e);
+        }
         // Trả về thông tin bản ghi đã cập nhật
         return DeviceAssignmentResponse.builder()
-                .id(updatedAssignment.getId())
-                .deviceId(updatedAssignment.getDevice().getId())
-                .serialNumber(updatedAssignment.getDevice().getSerialNumber())
-                .manufacturer(updatedAssignment.getDevice().getManufacture())
-                .userId(updatedAssignment.getToUser().getId())
-                .quantity(updatedAssignment.getQuantity())
-                .handoverDate(updatedAssignment.getHandoverDate())
-                .status(updatedAssignment.getStatus())
-                .pdfPath(updatedAssignment.getPdfPath())
+                .id(assignment.getId())
+                .deviceId(assignment.getDevice().getId())
+                .serialNumber(assignment.getDevice().getSerialNumber())
+                .manufacturer(assignment.getDevice().getManufacture())
+                .userId(assignment.getToUser().getId())
+                .quantity(assignment.getQuantity())
+                .handoverDate(assignment.getHandoverDate())
+                .status(assignment.getStatus())
+                .pdfPath(assignment.getPdfPath())
                 .build();
     }
     @Override
