@@ -52,9 +52,9 @@ public class NotificationService implements INotificationService {
         notificationRepository.save(notification);
 
         // Lấy danh sách email của tất cả owner
-        List<Owner> owners = ownerRepository.findAll();
+        List<User> owners = userRepository.findAll();
         List<String> emailList = owners.stream()
-                .map(Owner::getEmail)
+                .map(User::getEmail)
                 .collect(Collectors.toList());
 
         // Gửi email theo batch (mỗi batch 50 email)
