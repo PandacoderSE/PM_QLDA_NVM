@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { getToken } from "../../Services/localStorageService";
-import Pagination_T from "../../Default/Pagination";
-import Swal from "sweetalert2";
 import handleAlert from "../../Alert/handleAlert";
 
 const Persondevice = () => {
@@ -11,7 +9,7 @@ const Persondevice = () => {
   const [status, setStatus] = useState("");
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(5);
 
   const handlePageClick = (data) => {
     setCurrentPage(data.selected);
@@ -26,8 +24,8 @@ const Persondevice = () => {
   const fetchAssignments = async () => {
     try {
       const params = {};
-      if (status) params.status = status;
-      if (serialNumber) params.serialNumber = serialNumber;
+      if (status) params.status = status.toUpperCase();
+      if (serialNumber) params.serialNumber = serialNumber.trim();
 
       const response = await axios.get(
         "http://localhost:8080/api/v1/devices/assignments",
@@ -38,7 +36,12 @@ const Persondevice = () => {
           },
         }
       );
-      setAssignments(response.data?.data || []);
+
+      const data = response.data?.data || [];
+      setAssignments(data);
+      if (data.length === 0) {
+        handleAlert("Thông báo", "Không tìm thấy vật tư phù hợp!", "info");
+      }
     } catch (err) {
       if (err.response?.status === 401) {
         handleAlert("Lỗi", "Bạn không có quyền truy cập!", "error");
@@ -51,7 +54,7 @@ const Persondevice = () => {
 
   useEffect(() => {
     fetchAssignments();
-  }, []);
+  }, [status, serialNumber]);
 
   // Select/deselect device
   const handleSelectDevice = (deviceId) => {
@@ -170,12 +173,10 @@ const Persondevice = () => {
       const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
 
       if (action === "view") {
-        // Open PDF in a new tab
         window.open(url, "_blank");
         window.URL.revokeObjectURL(url);
         handleAlert("Thành công", "Đã mở biên bản bàn giao!", "success");
       } else {
-        // Trigger download
         const link = document.createElement("a");
         link.href = url;
         link.setAttribute("download", `handover_${assignmentId}.pdf`);
@@ -192,196 +193,242 @@ const Persondevice = () => {
   };
 
   return (
-    <div className="p-4">
-      {/* Title */}
-      <h2 className="text-2xl font-bold mb-4 text-center">
-        DANH SÁCH VẬT TƯ CÁ NHÂN
-      </h2>
+    <div className="min-h-screen bg-white-100 p-1">
+      <div className="container mx-auto">
+        {/* Title */}
+        <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">
+          Danh Sách Vật Tư Cá Nhân
+        </h2>
 
-      {/* Filters */}
-      <div className="flex gap-4 mt-10 mb-10">
-        <input
-          type="text"
-          placeholder="Mã vật tư"
-          value={serialNumber}
-          onChange={(e) => setSerialNumber(e.target.value)}
-          className="border p-2 rounded w-1/4"
-        />
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border p-2 rounded w-1/4"
-        >
-          <option value="">Trạng thái</option>
-          <option value="PENDING">PENDING</option>
-          <option value="ASSIGNED">APPROVED</option>
-          <option value="RETURNED">RETURNED</option>
-          <option value="REJECTED">REJECTED</option>
-        </select>
-        <button
-          onClick={fetchAssignments}
-          className="bg-blue-500 text-white px-4 py-2 rounded font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 flex items-center"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-            />
-          </svg>
-          Tìm kiếm
-        </button>
-      </div>
-
-      {/* Approve button for multiple devices */}
-      {selectedDevices.length > 0 && (
-        <div className="mb-4">
-          <button
-            onClick={handleApprove}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Xác nhận ({selectedDevices.length} thiết bị)
-          </button>
-        </div>
-      )}
-
-      {/* Data table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 p-2">
-                <input
-                  type="checkbox"
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedDevices(
-                        currentItems
-                          .filter((a) => a.status === "PENDING")
-                          .map((a) => a.deviceId)
-                      );
-                    } else {
-                      setSelectedDevices([]);
-                    }
-                  }}
-                  checked={
-                    currentItems.filter((a) => a.status === "PENDING").length >
-                      0 &&
-                    selectedDevices.length ===
-                      currentItems.filter((a) => a.status === "PENDING").length
-                  }
-                />
-              </th>
-              <th className="border border-gray-300 p-2">Mã vật tư</th>
-              <th className="border border-gray-300 p-2">Người bàn giao</th>
-              <th className="border border-gray-300 p-2">Manufacturer</th>
-              <th className="border border-gray-300 p-2">Thời gian bàn giao</th>
-              <th className="border border-gray-300 p-2">Trạng thái</th>
-              <th className="border border-gray-300 p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody align="center">
-            {currentItems.length === 0 ? (
-              <tr>
-                <td
-                  colSpan="7"
-                  className="border border-gray-300 p-2 text-center"
+        {/* Filters */}
+        <div className="bg-gray-50 p-6 rounded-lg shadow-md mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mã Vật Tư
+              </label>
+              <input
+                type="text"
+                placeholder="Nhập mã vật tư"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trạng Thái
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">Chọn trạng thái</option>
+                <option value="PENDING">ĐANG CHỜ</option>
+                <option value="ASSIGNED">ĐÃ DUYỆT</option>
+                <option value="RETURNED">ĐÃ TRẢ</option>
+                <option value="REJECTED">TỪ CHỐI</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchAssignments}
+                className="w-full bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 20"
                 >
-                  Không có vật tư được bàn giao.
-                </td>
-              </tr>
-            ) : (
-              currentItems.map((assignment) => (
-                <tr key={assignment.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 p-2">
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                  />
+                </svg>
+                Tìm Kiếm
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Approve button for multiple devices */}
+        {selectedDevices.length > 0 && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={handleApprove}
+              className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition shadow-md"
+            >
+              Xác Nhận ({selectedDevices.length} thiết bị)
+            </button>
+          </div>
+        )}
+
+        {/* Device List (Card Layout) */}
+        <div className="space-y-6">
+          {currentItems.length === 0 ? (
+            <div className="text-center text-gray-600 p-6 bg-white rounded-lg shadow-md">
+              Không có vật tư được bàn giao.
+            </div>
+          ) : (
+            currentItems.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
                     {assignment.status === "PENDING" && (
                       <input
                         type="checkbox"
                         checked={selectedDevices.includes(assignment.deviceId)}
                         onChange={() => handleSelectDevice(assignment.deviceId)}
+                        className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       />
                     )}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {assignment.serialNumber}
-                  </td>
-                  <td className="border border-gray-300 p-2">admin</td>
-                  <td className="border border-gray-300 p-2">
-                    {assignment.manufacturer}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {new Date(assignment.handoverDate).toLocaleDateString()}
-                  </td>
-                  <td
-                    className={`border border-gray-300 p-2 ${
-                      assignment.status === "PENDING"
-                        ? "text-yellow-500"
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Mã Vật Tư: {assignment.serialNumber}
+                      </h3>
+                      <div className="w-full h-0.5 bg-orange-500 mt-2 mb-3"></div>
+                      <p className="text-sm text-gray-600">
+                        Nhà Sản Xuất: {assignment.manufacturer}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Người Bàn Giao: admin
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Thời Gian Bàn Giao: {new Date(assignment.handoverDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-3">
+                    <span
+                      className={`text-sm font-medium px-3 py-1 rounded-full ${
+                        assignment.status === "PENDING"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : assignment.status === "ASSIGNED"
+                          ? "bg-green-100 text-green-600"
+                          : assignment.status === "RETURNED"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {assignment.status === "PENDING"
+                        ? "ĐANG CHỜ"
                         : assignment.status === "ASSIGNED"
-                        ? "text-green-500"
+                        ? "ĐÃ DUYỆT"
                         : assignment.status === "RETURNED"
-                        ? "text-red-500"
-                        : ""
-                    }`}
-                  >
-                    {assignment.status}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <div className="flex gap-2 justify-center">
+                        ? "ĐÃ TRẢ"
+                        : "TỪ CHỐI"}
+                    </span>
+                    <div className="flex gap-2">
                       {assignment.status === "PENDING" && (
                         <button
                           onClick={() => handleReject(assignment.id)}
-                          className="bg-red-500 text-white px-2 py-1 rounded"
+                          className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition shadow-sm"
                         >
-                          Từ chối
+                          Từ Chối
                         </button>
                       )}
-                      {(assignment.status === "ASSIGNED" ||assignment.status === "RETURNED")&& (
+                      {(assignment.status === "ASSIGNED" || assignment.status === "RETURNED") && (
                         <>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "view")}
-                            className="bg-blue-500 text-white px-2 py-1 rounded"
+                            className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                           >
                             Xem PDF
                           </button>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "download")}
-                            className="bg-blue-500 text-white px-2 py-1 rounded"
+                            className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                           >
                             Tải PDF
                           </button>
-                          </>
-                        )} ;
-                        {assignment.status === "ASSIGNED" && (
-                          <button
-                            onClick={() => handleReturn(assignment.id)}
-                            className="bg-blue-500 text-white px-2 py-1 rounded"
-                          >
-                            Trả lại
-                          </button>
+                        </>
+                      )}
+                      {assignment.status === "ASSIGNED" && (
+                        <button
+                          onClick={() => handleReturn(assignment.id)}
+                          className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                        >
+                          Trả Lại
+                        </button>
                       )}
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
-      {/* Fixed pagination */}
-      <div className="fixed bottom-0 right-0 w-full bg-white py-4 border-t border-gray-300">
-        <Pagination_T
-          pageCount={Math.ceil(assignments.length / itemsPerPage)}
-          onPageChange={handlePageClick}
-        />
+        {/* Fixed Pagination (Restored Original) */}
+        <div className="fixed bottom-2 right-2 bg-white py-2 px-4 rounded-lg shadow-md border border-gray-200">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+              disabled={currentPage === 0}
+              className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-50"
+            >
+              <svg
+                className="w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            {Array.from({ length: Math.ceil(assignments.length / itemsPerPage) }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentPage(index)}
+                className={`px-2 py-1 rounded text-sm ${
+                  currentPage === index
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(prev + 1, Math.ceil(assignments.length / itemsPerPage) - 1)
+                )
+              }
+              disabled={currentPage === Math.ceil(assignments.length / itemsPerPage) - 1}
+              className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-50"
+            >
+              <svg
+                className="w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

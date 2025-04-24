@@ -1,5 +1,6 @@
 package usol.group_4.ITDeviceManagement.service;
 
+import usol.group_4.ITDeviceManagement.DTO.UserDTO;
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.UserUseDevice;
@@ -20,4 +21,5 @@ public interface IUserService {
     void deletes (List<String> ids) ;
     UserResponse updateUserPr(String id , UTR userRequest) ;
     List<String> userRole () ;
+    List<UserDTO> getAdminsAndManagers() ;
 }

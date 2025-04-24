@@ -12,6 +12,7 @@ public class RequestResponse {
     private String content;
     private LocalDateTime requestDate;
     private String status;
+    private String title;
     private String userId; // Người gửi
     private String toUserId; // Người nhận
     private String approvedBy;

@@ -3,6 +3,7 @@ package usol.group_4.ITDeviceManagement.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import usol.group_4.ITDeviceManagement.DTO.UserDTO;
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.ApiResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
@@ -91,5 +92,9 @@ public class UserController {
                 .data(userService.updatePassword(updatePasswordRequest))
                 .build();
     }
-
+    @GetMapping("/admins-managers")
+    public ResponseEntity<List<UserDTO>> getAdminsAndManagers() {
+        List<UserDTO> adminsAndManagers = userService.getAdminsAndManagers();
+        return ResponseEntity.ok(adminsAndManagers);
+    }
 }

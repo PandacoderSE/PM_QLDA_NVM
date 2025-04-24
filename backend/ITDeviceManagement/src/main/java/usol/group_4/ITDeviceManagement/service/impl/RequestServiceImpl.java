@@ -42,19 +42,14 @@ public class RequestServiceImpl implements IRequestService {
     @Override
     @Transactional
     public RequestResponse createRequest(RequestDTO createRequestDTO) {
-        // Kiểm tra các trường bắt buộc (đã được xử lý bởi @NotBlank, nhưng để chắc chắn)
-        if (createRequestDTO.getContent() == null || createRequestDTO.getContent().trim().isEmpty()) {
-            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Content cannot be empty");
-        }
-        if (createRequestDTO.getUserId() == null || createRequestDTO.getUserId().trim().isEmpty()) {
-            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "User ID cannot be empty");
-        }
+        // Kiểm tra các trường bắt buộc (đã được xử lý bởi @NotBlank, nhưng để chắc chắn
 
         Request request = new Request();
         request.setUser(getMyInfo());
         request.setToUserId(createRequestDTO.getToUserId());
         request.setContent(createRequestDTO.getContent());
         request.setRequestDate(LocalDateTime.now());
+        request.setTitle(createRequestDTO.getTitle());
         request.setStatus(RequestStatus.PENDING);
         request.setCreatedTime(LocalDateTime.now());
         requestRepository.save(request);
@@ -139,6 +134,7 @@ public class RequestServiceImpl implements IRequestService {
                 .status(request.getStatus().name())
                 .userId(request.getUser().getId())
                 .toUserId(request.getToUserId())
+                .title(request.getTitle())
                 .approvedBy(request.getApprovedBy())
                 .approvedDate(request.getApprovedDate())
                 .build();

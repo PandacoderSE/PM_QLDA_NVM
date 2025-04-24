@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import usol.group_4.ITDeviceManagement.DTO.UserDTO;
 import usol.group_4.ITDeviceManagement.DTO.request.*;
 import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.UserUseDevice;
@@ -220,6 +221,11 @@ public class UserServiceImpl implements IUserService {
             roleName.add(it.getName()) ;
         }
         return roleName ;
+    }
+
+    @Override
+    public List<UserDTO> getAdminsAndManagers() {
+        return userRepository.findAdminsAndManagers();
     }
 
 

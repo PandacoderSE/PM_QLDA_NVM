@@ -45,7 +45,7 @@ public class RequestController {
     // API dành cho admin/manager: Lấy danh sách các request được gửi đến họ
 
     @GetMapping
-    public ResponseEntity<List<RequestResponse>> getAllRequests() { // Thêm userId để lọc
+    public ResponseEntity<List<RequestResponse>> getAllRequests() {
         return ResponseEntity.ok(requestService.getAllRequests());
     }
 

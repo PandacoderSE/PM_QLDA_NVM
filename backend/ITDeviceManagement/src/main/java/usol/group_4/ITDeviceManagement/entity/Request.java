@@ -29,7 +29,7 @@ public class Request extends Auditable {
 
     @Enumerated(EnumType.STRING)
     private RequestStatus status; // Enum: PENDING, APPROVED, REJECTED
-
+    private String title ;
     private LocalDateTime requestDate;
     private String approvedBy;
 
