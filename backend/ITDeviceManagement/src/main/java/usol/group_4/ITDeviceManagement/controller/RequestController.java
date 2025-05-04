@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import usol.group_4.ITDeviceManagement.DTO.request.RequestDTO;
 import usol.group_4.ITDeviceManagement.DTO.response.RequestResponse;
+import usol.group_4.ITDeviceManagement.constant.RequestStatus;
 import usol.group_4.ITDeviceManagement.service.IRequestService;
 
 import javax.validation.Valid;
@@ -71,7 +72,7 @@ public class RequestController {
     @GetMapping("/search")
     public ResponseEntity<List<RequestResponse>> searchRequests(
             @RequestParam(required = false) String userId,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) RequestStatus status) {
         return ResponseEntity.ok(requestService.searchRequests(userId, status));
     }
 }

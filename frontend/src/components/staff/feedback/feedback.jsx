@@ -380,25 +380,6 @@ const FeedbackSystem = () => {
             Nội Dung: {selectedRequest.content}
           </p>
           <h3 className="text-lg font-semibold mb-2">Phản Hồi</h3>
-          <div className="border-t border-gray-200 pt-4 mb-4">
-            {messages.length === 0 ? (
-              <p className="text-gray-600">Chưa có phản hồi nào.</p>
-            ) : (
-              <ul className="space-y-2">
-                {messages.map((msg, index) => (
-                  <li key={index} className="p-3 border border-gray-200 rounded">
-                    <p className="font-medium">
-                      {msg.sender?.firstname} {msg.sender?.lastname}:
-                    </p>
-                    <p>{msg.content}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Gửi Phản Hồi
-          </label>
           <textarea
             rows="4"
             value={newMessage}

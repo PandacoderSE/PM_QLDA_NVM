@@ -86,7 +86,7 @@ public class RequestServiceImpl implements IRequestService {
             throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Response content cannot be empty");
         }
 
-        request.setContent(request.getContent() + "\n[Response]: " + responseContent);
+        request.setContent(request.getContent() + "\n [Đối sách]: " + responseContent);
         request.setStatus(RequestStatus.RESPONDED);
         request.setUpdatedTime(LocalDateTime.now());
         requestRepository.save(request);
@@ -120,7 +120,8 @@ public class RequestServiceImpl implements IRequestService {
     }
 
     @Override
-    public List<RequestResponse> searchRequests(String userId, String status) {
+    public List<RequestResponse> searchRequests(String userId, RequestStatus status) {
+
         return requestRepository.findByUserIdOrStatus(userId, status).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

@@ -2,6 +2,7 @@ package usol.group_4.ITDeviceManagement.service;
 
 import usol.group_4.ITDeviceManagement.DTO.request.RequestDTO;
 import usol.group_4.ITDeviceManagement.DTO.response.RequestResponse;
+import usol.group_4.ITDeviceManagement.constant.RequestStatus;
 
 import java.util.List;
 
@@ -24,5 +25,5 @@ public interface IRequestService {
 
     void deleteRequest(Long requestId);
 
-    List<RequestResponse> searchRequests(String userId, String status);
+    List<RequestResponse> searchRequests(String userId, RequestStatus status);
 }
