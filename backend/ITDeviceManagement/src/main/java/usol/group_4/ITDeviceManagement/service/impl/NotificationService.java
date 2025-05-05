@@ -7,15 +7,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import usol.group_4.ITDeviceManagement.DTO.request.NotiRequest;
 import usol.group_4.ITDeviceManagement.DTO.response.NotiResponse;
-import usol.group_4.ITDeviceManagement.DTO.response.UserResponse;
 import usol.group_4.ITDeviceManagement.entity.Notification;
-import usol.group_4.ITDeviceManagement.entity.Owner;
 import usol.group_4.ITDeviceManagement.entity.User;
 import usol.group_4.ITDeviceManagement.exception.ErrorCode;
 import usol.group_4.ITDeviceManagement.repository.NotificationRepository;
-import usol.group_4.ITDeviceManagement.repository.OwnerRepository;
 import usol.group_4.ITDeviceManagement.repository.UserRepository;
 import usol.group_4.ITDeviceManagement.service.INotificationService;
 
@@ -38,8 +34,6 @@ public class NotificationService implements INotificationService {
     private UserRepository userRepository;
     @Autowired
     private EmailService emailService;
-    @Autowired
-    private OwnerRepository ownerRepository;
     @Autowired
     private ModelMapper modelMapper ;
     public void createAndSendNotification(String title, String content) throws MessagingException {

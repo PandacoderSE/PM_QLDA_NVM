@@ -2,12 +2,7 @@ package usol.group_4.ITDeviceManagement.DTO.response;
 
 import lombok.Data;
 import usol.group_4.ITDeviceManagement.entity.Category;
-import usol.group_4.ITDeviceManagement.entity.Owner;
-import usol.group_4.ITDeviceManagement.entity.User;
 
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import java.time.LocalDateTime;
 import java.util.Date;
 

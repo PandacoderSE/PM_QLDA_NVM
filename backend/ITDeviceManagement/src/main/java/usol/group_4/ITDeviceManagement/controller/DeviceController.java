@@ -111,11 +111,7 @@ public class DeviceController {
         return ResponseEntity.ok(results);
     }
 
-    @GetMapping("/device-department-counts")
-    public ResponseEntity<?> getDeviceCountsByDepartment() {
-        List<Object[]> results = deviceService.countDeviceByDepartment();
-        return ResponseEntity.ok(results);
-    }
+
 
     // Xử lý liên quan đến QRCode
     @GetMapping("/{id}/qrcode")

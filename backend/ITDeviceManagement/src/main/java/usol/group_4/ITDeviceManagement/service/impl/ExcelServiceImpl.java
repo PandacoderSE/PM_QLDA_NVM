@@ -9,17 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import usol.group_4.ITDeviceManagement.DTO.response.CategoryResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.ExcelResponse;
+import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.constant.StatusDevice;
-import usol.group_4.ITDeviceManagement.entity.Category;
-import usol.group_4.ITDeviceManagement.entity.Department;
-import usol.group_4.ITDeviceManagement.entity.Device;
-import usol.group_4.ITDeviceManagement.entity.Owner;
+import usol.group_4.ITDeviceManagement.entity.*;
 import usol.group_4.ITDeviceManagement.exception.CustomResponseException;
-import usol.group_4.ITDeviceManagement.repository.DepartmentRepository;
+import usol.group_4.ITDeviceManagement.repository.CategoryRepository;
+import usol.group_4.ITDeviceManagement.repository.DeviceAssignmentRepository;
 import usol.group_4.ITDeviceManagement.repository.DeviceRepository;
-import usol.group_4.ITDeviceManagement.repository.OwnerRepository;
+import usol.group_4.ITDeviceManagement.repository.UserRepository;
 import usol.group_4.ITDeviceManagement.service.ICategoryService;
-import usol.group_4.ITDeviceManagement.service.IDeviceService;
 import usol.group_4.ITDeviceManagement.service.IExcelService;
 import usol.group_4.ITDeviceManagement.service.IQRService;
 
@@ -40,19 +38,21 @@ public class ExcelServiceImpl implements IExcelService {
     @Autowired
     private DeviceRepository deviceRepository;
     @Autowired
-    private OwnerRepository ownerRepository;
-    @Autowired
     private ICategoryService categoryService;
     @Autowired
     private IQRService qrService;
     @Autowired
     private ModelMapper modelMapper;
-    @Autowired
-    private DepartmentRepository departmentRepository;
 
     public static String[] HEADERs = {"STT", "Accounting Code", "Serial Number", "Specification", "OwnerID", "Owner name", "Department", "Manufacture", "Location", "Ngày mua thiết bị", "Dự án/ Mục đích sử dụng", "Deadline sử dụng", "Notes", "Update 10/2024", "Status"};
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("M/d/yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy");
+    @Autowired
+    private DeviceAssignmentRepository deviceAssignmentRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     public static Date stringToDate(String dateStr) {
         try {
@@ -84,64 +84,109 @@ public class ExcelServiceImpl implements IExcelService {
     @Override
     public void importFromExcel(InputStream is) {
         List<ExcelResponse> excelResponses = excelToDevices(is);
+        if (excelResponses == null || excelResponses.isEmpty()) {
+            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Danh sách thiết bị từ Excel rỗng hoặc không hợp lệ");
+        }
+
         List<Device> devices = new ArrayList<>();
+        List<DeviceAssignment> assignments = new ArrayList<>();
 
         for (ExcelResponse response : excelResponses) {
             Device device = modelMapper.map(response, Device.class);
-            Category category = new Category();
-            category.setId(response.getCategoryId());
-            category.setName(response.getCategoryName());
-            device.setCategory(category);
-            device.setOwner_id(response.getOwnerId());
+            if (response.getCategoryId() != null) {
+                Category category = categoryRepository.findById(response.getCategoryId())
+                        .orElseThrow(() -> new CustomResponseException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục với ID: " + response.getCategoryId()));
+                device.setCategory(category);
+            } else {
+                throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Category ID không được để trống");
+            }
+            String ownerId = extractOwnerId(response.getOwnerId());
+            if (ownerId != null && !ownerId.isEmpty()) {
+                User user = userRepository.findById(ownerId)
+                        .orElseThrow(() -> new CustomResponseException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với ID: " + ownerId));
+                device.setStatus(StatusDevice.DA_SU_DUNG.name());
+
+                device = deviceRepository.save(device);
+
+                DeviceAssignment deviceAssignment = new DeviceAssignment();
+                deviceAssignment.setStatus(AssignmentStatus.ASSIGNED);
+                deviceAssignment.setDevice(device);
+                deviceAssignment.setToUser(user);
+                assignments.add(deviceAssignment);
+            } else {
+                device = deviceRepository.save(device);
+            }
+
             devices.add(device);
         }
-        deviceRepository.saveAll(devices);
+
+        deviceAssignmentRepository.saveAll(assignments);
     }
 
+    private String extractOwnerId(String ownerId) {
+        if (ownerId == null || ownerId.isEmpty()) {
+            return null;
+        }
+        int dotIndex = ownerId.indexOf('.');
+        return dotIndex != -1 ? ownerId.substring(0, dotIndex) : ownerId;
+    }
     @Override
     public ByteArrayInputStream loadSelectedDevices(List<Long> deviceIds) {
         try {
-            List<ExcelResponse> listExcel = new ArrayList<>();
-            for (Long id : deviceIds) {
-                Device device = deviceRepository.findById(id)
-                        .orElseThrow(() -> new CustomResponseException(HttpStatus.NOT_FOUND, "Thiết bị không tồn tại"));
-
-                // Thêm đối tượng ExcelResponse vào danh sách
-                listExcel.add(new ExcelResponse(
-                        Optional.ofNullable(device.getAccountingCode()).orElse(""),
-                        Optional.ofNullable(device.getSerialNumber()).orElse(""),
-                        Optional.ofNullable(device.getSpecification()).orElse(""),
-                        Optional.ofNullable(device.getManufacture()).orElse(""),
-                        Optional.ofNullable(device.getLocation()).orElse(""),
-                        device.getPurchaseDate(),
-                        Optional.ofNullable(device.getPurpose()).orElse(""),
-                        device.getExpirationDate(),
-                        Optional.ofNullable(device.getNotes()).orElse(""),
-                        device.getUpdatedTime(),
-                        Optional.ofNullable(device.getCategory().getName()).orElse(""),
-                        device.getCategory().getId(),
-                        Optional.ofNullable(device.getOwner_id()).orElse(""),
-                        "",
-                        null,
-                        Optional.ofNullable(device.getStatus()).orElse(""),
-                        ""
-                ));
-                // Nếu ownerID không rỗng, tìm chủ sở hữu và cập nhật ownerName và departmentID
-                if (!Optional.ofNullable(device.getOwner_id()).orElse("").isEmpty()) {
-                    Owner owner = ownerRepository.findById(device.getOwner_id())
-                            .orElseThrow(() -> new CustomResponseException(HttpStatus.NOT_FOUND, "Chủ sở hữu không tồn tại"));
-
-                    // Lấy đối tượng ExcelResponse vừa thêm vào danh sách
-                    ExcelResponse lastAdded = listExcel.get(listExcel.size() - 1);
-                    lastAdded.setOwnerName(Optional.ofNullable(owner.getName()).orElse(""));
-                    lastAdded.setDepartmentID(owner.getDepartment().getId());
-                }
+            if (deviceIds == null || deviceIds.isEmpty()) {
+                throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Danh sách ID thiết bị không hợp lệ");
             }
-            return devicesToExcel(listExcel);
 
+            List<ExcelResponse> excelResponses = deviceIds.stream()
+                    .map(this::createExcelResponse)
+                    .collect(Collectors.toList());
+
+            return devicesToExcel(excelResponses);
         } catch (Exception e) {
-            throw new CustomResponseException(HttpStatus.INTERNAL_SERVER_ERROR, "Quá trình lấy dữ liệu từ database bị lỗi");
+            throw new CustomResponseException(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu từ database: " + e.getMessage());
         }
+    }
+
+    private ExcelResponse createExcelResponse(Long deviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new CustomResponseException(HttpStatus.NOT_FOUND, "Thiết bị không tồn tại với ID: " + deviceId));
+
+        // Không ném lỗi nếu không có DeviceAssignment, để giá trị rỗng
+        Optional<DeviceAssignment> assignmentOpt = deviceAssignmentRepository
+                .findTopByDeviceIdAndStatusOrderByHandoverDateDesc(deviceId, AssignmentStatus.ASSIGNED);
+
+        String ownerId = "";
+        String ownerName = "";
+        Long departmentId = null;
+
+        if (assignmentOpt.isPresent()) {
+            User user = assignmentOpt.get().getToUser();
+            if (user != null) {
+                ownerId = user.getId();
+                ownerName = Optional.of(user.getLastname() + " " + user.getFirstname()).orElse("");
+//                departmentId = Optional.ofNullable(user.getDepartmentId()).map(String::valueOf).orElse("");
+            }
+        }
+
+        return new ExcelResponse(
+                Optional.ofNullable(device.getAccountingCode()).orElse(""),
+                Optional.ofNullable(device.getSerialNumber()).orElse(""),
+                Optional.ofNullable(device.getSpecification()).orElse(""),
+                Optional.ofNullable(device.getManufacture()).orElse(""),
+                Optional.ofNullable(device.getLocation()).orElse(""),
+                device.getPurchaseDate(),
+                Optional.ofNullable(device.getPurpose()).orElse(""),
+                device.getExpirationDate(),
+                Optional.ofNullable(device.getNotes()).orElse(""),
+                device.getUpdatedTime(),
+                Optional.ofNullable(device.getCategory()).map(Category::getName).orElse(""),
+                Optional.ofNullable(device.getCategory()).map(Category::getId).orElse(null),
+                ownerId,
+                ownerName,
+                departmentId,
+                Optional.ofNullable(device.getStatus()).orElse(""),
+                ""
+        );
     }
 
     private static CellStyle createHeaderStyle(Workbook workbook) {
@@ -229,10 +274,6 @@ public class ExcelServiceImpl implements IExcelService {
                     Cell cell6 = row.createCell(6);
                     String departmentName = "";
 
-                    if (!excelResponse.getOwnerId().isEmpty()) {
-                        Optional<Owner> owner = ownerRepository.findById(String.valueOf(excelResponse.getOwnerId()));
-                        departmentName = owner.get().getDepartment().getName();
-                    }
                     cell6.setCellValue(departmentName);
                     cell6.setCellStyle(dataCellStyle);
 
@@ -286,7 +327,7 @@ public class ExcelServiceImpl implements IExcelService {
             Workbook workbook = new XSSFWorkbook(is);
             List<ExcelResponse> excelResponses = new ArrayList<>();
             List<CategoryResponse> categories = categoryService.getAllCategory();
-            List<Department> departments = departmentRepository.findAll();
+//            List<Department> departments = departmentRepository.findAll();
             List<Device> devices = deviceRepository.findAll();
 
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
@@ -410,30 +451,9 @@ public class ExcelServiceImpl implements IExcelService {
                             case 6:
                                 if (currentCell.getCellType() == CellType.STRING) {
                                     String nameDepartment = currentCell.getStringCellValue();
-                                    Optional<Department> department = Optional.empty();
-                                    if (nameDepartment != "") {
-                                        department = departments.stream()
-                                                .filter(d -> d.getName().equals(nameDepartment))
-                                                .findFirst();
-                                    }
 
-                                    if (department.isPresent()) {
-                                        excelResponse.setDepartmentID(department.get().getId());
-                                    } else if (department.equals(Optional.empty())) {
-                                        excelResponse.setDepartmentID(null);
-                                    } else {
-                                        throw new CustomResponseException(HttpStatus.NOT_FOUND, "Phòng ban bạn nhập không tồn tại tại dòng " + currentRow.getRowNum() + " sheet " + deviceType);
-                                    }
                                 } else if (currentCell.getCellType() == CellType.NUMERIC) {
                                     String nameDepartment = String.valueOf((long) currentCell.getNumericCellValue());
-                                    Optional<Department> department = departments.stream()
-                                            .filter(d -> d.getName().equals(nameDepartment))
-                                            .findFirst();
-                                    if (department.isPresent()) {
-                                        excelResponse.setDepartmentID(department.get().getId());
-                                    } else {
-                                        throw new CustomResponseException(HttpStatus.NOT_FOUND, "Phòng ban bạn nhập không tồn tại tại dòng " + currentRow.getRowNum() + " sheet " + deviceType);
-                                    }
                                 } else {
                                     excelResponse.setDepartmentID(null);
                                 }

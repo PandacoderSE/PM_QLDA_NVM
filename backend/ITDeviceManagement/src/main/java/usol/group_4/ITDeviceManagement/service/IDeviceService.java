@@ -29,7 +29,6 @@ public interface IDeviceService {
 
     public List<Object[]> countDeviceByCategory();
 
-    public List<Object[]> countDeviceByDepartment();
 
     Device findDeviceById(Long id);
 

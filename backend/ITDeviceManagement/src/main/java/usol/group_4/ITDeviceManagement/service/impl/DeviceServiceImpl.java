@@ -44,8 +44,6 @@ public class DeviceServiceImpl implements IDeviceService {
     @Autowired
     private DeviceRepository deviceRepository;
     @Autowired
-    private OwnerRepository ownerRepository;
-    @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
     private IUserService userService;
@@ -95,14 +93,7 @@ public class DeviceServiceImpl implements IDeviceService {
         Category category = request.getCategoryId() != null ? categoryRepository.findById(request.getCategoryId()).orElse(null) : null;
         User user = userService.getCurrentUser();
 
-
         device.setCategory(category) ;
-        device.setOwner_id("");
-        String ownerName = "";
-        if (device.getOwner_id() != null && device.getOwner_id() != "") {
-            Optional<Owner> ownerById = ownerRepository.findById(device.getOwner_id());
-            ownerName = ownerById.get().getName();
-        }
 
         String qrCodeText = String.format(
                 "Accounting code: %s \n" +
@@ -110,15 +101,13 @@ public class DeviceServiceImpl implements IDeviceService {
                         "Location: %s \n" +
                         "Notes: %s \n" +
                         "Specification: %s \n" +
-                        "Category: %s \n" +
-                        "Owner: %s \n",
+                        "Category: %s \n",
                 device.getAccountingCode() != null ? device.getAccountingCode() : "",
                 device.getSerialNumber() != null ? device.getSerialNumber() : "",
                 device.getLocation() != null ? device.getLocation() : "",
                 device.getNotes() != null ? device.getNotes() : "",
                 device.getSpecification() != null ? device.getSpecification() : "",
-                device.getCategory() != null ? device.getCategory().getName() : "N/A",
-                ownerName
+                device.getCategory() != null ? device.getCategory().getName() : "N/A"
         );
         byte[] qrCodeImage = null;
         try {
@@ -203,10 +192,6 @@ public class DeviceServiceImpl implements IDeviceService {
         return deviceRepository.findDeviceQuantityByCategory();
     }
 
-    @Override
-    public List<Object[]> countDeviceByDepartment() {
-        return deviceRepository.findDeviceQuantityByDepartment();
-    }
 
     private void validateDeviceCreateRequest(DeviceCreateRequest request) {
         checkCategoryExistence(request.getCategoryId());

@@ -36,7 +36,6 @@ public class Device extends Auditable{
     @JoinColumn(name = "category_id")
     private Category category;
     private String status;
-	private String owner_id;
 
     @OneToMany(mappedBy = "device", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DeviceAssignment> deviceAssignments = new ArrayList<>();

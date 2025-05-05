@@ -4,7 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
-import usol.group_4.ITDeviceManagement.entity.Department;
 import usol.group_4.ITDeviceManagement.entity.DeviceAssignment;
 
 import java.util.List;
@@ -30,5 +29,5 @@ public interface DeviceAssignmentRepository extends JpaRepository<DeviceAssignme
             @Param("userId") String userId,
             @Param("status") AssignmentStatus status,
             @Param("serialNumber") String serialNumber);
-
+    Optional<DeviceAssignment> findTopByDeviceIdAndStatusOrderByHandoverDateDesc(Long deviceId, AssignmentStatus status);
 }

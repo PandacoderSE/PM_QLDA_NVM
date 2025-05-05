@@ -15,7 +15,6 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 import axios from "axios";
 import { getToken } from "../Services/localStorageService";
 import Chart from "./Chart";
-import CountProductByDepartment from "./CountProductByDepartment";
 
 ChartJS.register(
   ArcElement,
@@ -156,23 +155,6 @@ const DoughnutChart = () => {
             Thống kê theo danh mục
           </button>
         )}
-        {isOpenStatiscisByDepartment ? (
-          <button
-            onClick={handleCloseStatiscisByDepartment}
-            type="button"
-            class="ml-4 mt-5 focus:outline-none text-white bg-gray-800 hover:bg-gray-900 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
-          >
-            Ẩn xem theo phòng ban
-          </button>
-        ) : (
-          <button
-            onClick={handleOpenStatiscisByDepartment}
-            type="button"
-            class="ml-4 mt-5 focus:outline-none text-white bg-gray-800 hover:bg-gray-900 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
-          >
-            Thống kê theo phòng ban
-          </button>
-        )}
         {isOpenDeviceStatus ? (
           <button
             onClick={handleCloseDeviceStatus}
@@ -237,17 +219,6 @@ const DoughnutChart = () => {
             <div class="max-w-full px-3 lg:flex-none">
               <div class="">
                 <Chart />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {isOpenStatiscisByDepartment && (
-        <div class="  relative bg-clip-border mt-4 mx-4 rounded-xl overflow-hidden bg-white text-gray-700">
-          <div class="">
-            <div class="max-w-full px-3 lg:flex-none">
-              <div class="">
-                <CountProductByDepartment />
               </div>
             </div>
           </div>

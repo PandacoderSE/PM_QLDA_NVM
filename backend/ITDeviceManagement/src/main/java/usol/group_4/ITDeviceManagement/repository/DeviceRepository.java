@@ -41,8 +41,6 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
             "WHERE d.status = :status")
     List<Object[]> findByStatus(@Param("status") String status);
 
-    @Query("SELECT d FROM Device d WHERE d.owner_id = :owner_id")
-    Device checkExistOwner(String owner_id);
 
 //    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.owner_id, d.status  FROM Device d WHERE (:serialNumber IS NULL OR d.serialNumber = :serialNumber) "
 //            + "AND (:fromDate IS NULL OR d.purchaseDate >= :fromDate) " + "AND (:toDate IS NULL OR d.purchaseDate <= :toDate) "
@@ -80,15 +78,9 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     @Query("UPDATE Device d SET d.category = null WHERE d.category.id = :categoryId")
     void updateCategoryIdToNull(@Param("categoryId") Long categoryId);
 
-    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.status, d.accountingCode, o.name, o.id, d.identifyCode FROM Device d LEFT JOIN Owner o ON d.owner_id = o.id WHERE d.serialNumber = :serialNumber")
+    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.status, d.accountingCode, d.identifyCode FROM Device d  WHERE d.serialNumber = :serialNumber")
     List<Object[]> getDeviceBySerialNum(String serialNumber);
 
-    @Query("SELECT de.name, COUNT(d) " +
-            "FROM Device d " +
-            "INNER JOIN Owner o ON d.owner_id = o.id " +
-            "LEFT JOIN Department de ON o.department.id = de.id " +
-            "GROUP BY de.name")
-    List<Object[]> findDeviceQuantityByDepartment();
 
     @Query("SELECT d.serialNumber, d.status FROM Device d WHERE d.status IN ('CHUA_SU_DUNG', 'DA_SU_DUNG')")
     List<Object[]> getDeviceQuantityByStatus();
