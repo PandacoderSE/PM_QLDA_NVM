@@ -283,7 +283,7 @@ public class DeviceServiceImpl implements IDeviceService {
         try {
             List<Device> devices = Arrays.asList(device);
             String receiverName = owner.get().getFirstname() + " " + owner.get().getLastname();
-            String pdfPath = pdfService.generateHandoverPdf(savedAssignment, devices, receiverName, null, null);
+            String pdfPath = pdfService.generateHandoverPdf(savedAssignment, devices, receiverName, null, null, false, false);
             savedAssignment.setPdfPath(pdfPath);
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate handover PDF", e);
@@ -363,7 +363,7 @@ public class DeviceServiceImpl implements IDeviceService {
             User handoverUser = userRepository.findById(assignment.getHandoverPerson()).orElseThrow();
 
             // Kiểm tra chữ ký
-            if (handoverUser.getSignaturePath() == null || toUser.getSignaturePath() == null) {
+            if (handoverUser.getSignaturePath() == null) {
                 throw new CustomResponseException(HttpStatus.BAD_REQUEST, "Both signatures are required before approval");
             }
 
@@ -435,7 +435,7 @@ public class DeviceServiceImpl implements IDeviceService {
         String receiverName = getMyInfo().getFirstname();
         try {
             List<Device> devices = List.of(device);
-            String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, getMyInfo().getLastname() + " " + getMyInfo().getFirstname(), getMyInfo().getLastname() + " " + getMyInfo().getFirstname());
+            String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, getMyInfo().getLastname() + " " + getMyInfo().getFirstname(), getMyInfo().getLastname() + " " + getMyInfo().getFirstname(), true, true);
             assignment.setPdfPath(updatedPdfPath);
             deviceAssignmentRepository.save(assignment);
         } catch (Exception e) {

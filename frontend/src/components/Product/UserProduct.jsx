@@ -303,7 +303,7 @@ const UserProduct = () => {
     }
   };
 
-  // Save signature
+  // Save signature for a single assignment
   const saveSignature = async (assignmentId, useExisting = false) => {
     try {
       if (useExisting) {
@@ -322,8 +322,6 @@ const UserProduct = () => {
             ...prev,
             [assignmentId]: userSignature, // Lưu chữ ký để hiển thị
           }));
-          MySwal.fire("Thành công", "Bàn giao thành công!", "success");
-          // fetchAssignments();
         } else {
           MySwal.fire("Lỗi", "API trả về không thành công!", "error");
         }
@@ -339,7 +337,6 @@ const UserProduct = () => {
         }
 
         const signatureData = sigCanvas.current.toDataURL("image/png");
-        console.log("Signature Data URL:", signatureData);
         const response = await fetch(signatureData);
         if (!response.ok) {
           throw new Error("Không thể chuyển đổi dữ liệu chữ ký thành Blob");
@@ -365,9 +362,6 @@ const UserProduct = () => {
             [assignmentId]: signatureData,
           }));
           setUserSignature(signatureData); // Cập nhật chữ ký có sẵn
-          MySwal.fire("Thành công", "Bàn giao thành công!", "success");
-          sigCanvas.current.clear();
-          // fetchAssignments();
         } else {
           MySwal.fire("Lỗi", "API trả về không thành công!", "error");
         }
@@ -375,6 +369,20 @@ const UserProduct = () => {
     } catch (error) {
       console.error("Lỗi khi lưu chữ ký:", error);
       MySwal.fire("Lỗi", `Không thể lưu chữ ký: ${error.message}`, "error");
+    }
+  };
+
+  // Handle sign all assignments
+  const handleSignAll = async (useExisting = false) => {
+    try {
+      for (const assignmentId of assignmentIds) {
+        if (!signedAssignments[assignmentId]) {
+          await saveSignature(assignmentId, useExisting);
+        }
+      }
+      MySwal.fire("Thành công", "Đã ký tất cả bàn giao thành công!", "success");
+    } catch (error) {
+      MySwal.fire("Lỗi", `Lỗi khi ký bàn giao: ${error.message}`, "error");
     }
   };
 
@@ -870,30 +878,6 @@ const UserProduct = () => {
                     >
                       Xem PDF
                     </button>
-                    {userSignature && !signedAssignments[id] ? (
-                      <>
-                        <button
-                          onClick={() => saveSignature(id, true)}
-                          className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 mr-2"
-                        >
-                          Sử dụng chữ ký hiện tại
-                        </button>
-                        <button
-                          onClick={() => saveSignature(id, false)}
-                          className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700"
-                        >
-                          Vẽ chữ ký mới
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => saveSignature(id, false)}
-                        className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700"
-                        disabled={signedAssignments[id]}
-                      >
-                        Ký
-                      </button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -936,21 +920,38 @@ const UserProduct = () => {
         >
           Quay lại
         </button>
-        <button
-          onClick={() => {
-            setStep(1);
-            setUsername("");
-            setUserInfo(null);
-            setSelectedDevices([]);
-            setDeviceList([]);
-            setAssignmentIds([]);
-            setSignedAssignments({});
-            setUserSignature(null);
-          }}
-          className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Hoàn tất
-        </button>
+        <div className="flex gap-2">
+          {userSignature ? (
+            <button
+              onClick={() => handleSignAll(true)}
+              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Ký tất cả với chữ ký hiện tại
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSignAll(false)}
+              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Ký tất cả
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setStep(1);
+              setUsername("");
+              setUserInfo(null);
+              setSelectedDevices([]);
+              setDeviceList([]);
+              setAssignmentIds([]);
+              setSignedAssignments({});
+              setUserSignature(null);
+            }}
+            className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Hoàn tất
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import usol.group_4.ITDeviceManagement.DTO.response.DeviceAssignmentResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.DeviceResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.PageResponse;
 import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
+import usol.group_4.ITDeviceManagement.constant.StatusDevice;
 import usol.group_4.ITDeviceManagement.entity.Device;
 import usol.group_4.ITDeviceManagement.entity.DeviceAssignment;
 import usol.group_4.ITDeviceManagement.entity.User;
@@ -267,6 +268,106 @@ public class DeviceController {
                     .body("Lỗi khi tải file PDF: " + e.getMessage());
         }
     }
+    //api mới ký Ký hợp đồng bàn giao của bên staff
+    @PostMapping("/sign-staff/{assignmentId}")
+    public ApiResponse<?> signAssignmentStaff(@PathVariable Long assignmentId,
+                                         @RequestParam(required = false) MultipartFile signature) {
+        DeviceAssignment assignment = deviceAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new CustomResponseException(HttpStatus.NOT_FOUND, "Assignment not found"));
+
+        // Lấy thông tin người dùng hiện tại
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username);
+        // Lưu chữ ký nếu được gửi từ frontend
+        if (signature != null && !signature.isEmpty()) {
+            String signatureDir = "Uploads/signatures/";
+            File directory = new File(signatureDir);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            // Tạo khóa AES và IV
+            SecureRandom random = new SecureRandom();
+            byte[] keyBytes = new byte[32]; // AES-256
+            byte[] ivBytes = new byte[16]; // IV cho CBC
+            random.nextBytes(keyBytes);
+            random.nextBytes(ivBytes);
+
+            SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+
+            // Mã hóa file chữ ký
+            try {
+                Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+                byte[] encrypted = cipher.doFinal(signature.getBytes());
+                String signatureFileName = String.format("signature_%d_%s.enc", System.currentTimeMillis(), user.getId());
+                String signaturePath = signatureDir + signatureFileName;
+                try (FileOutputStream fos = new FileOutputStream(signaturePath)) {
+                    fos.write(ivBytes); // Lưu IV đầu file
+                    fos.write(encrypted);
+                }
+
+                // Lưu khóa AES (Base64)
+                String encryptedKey = Base64.getEncoder().encodeToString(keyBytes);
+                user.setEncryptionKey(encryptedKey);
+                user.setSignaturePath(signaturePath);
+                userRepository.save(user);
+            } catch (Exception e) {
+                throw new CustomResponseException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save signature: " + e.getMessage());
+            }
+        } else if (user.getSignaturePath() == null) {
+            // Nếu không gửi chữ ký và người dùng chưa có chữ ký
+            throw new CustomResponseException(HttpStatus.BAD_REQUEST, "No signature provided and no existing signature found");
+        }
+
+        // Cập nhật PDF với chữ ký
+        try {
+            List<Device> devices = List.of(assignment.getDevice());
+            String receiverName = assignment.getToUser().getFirstname() + " " + assignment.getToUser().getLastname();
+            String handoverName = assignment.getHandoverPerson();
+            User handoverUser = userRepository.findById(handoverName).orElseThrow();
+//            String signName = user.getId().equals(assignment.getToUser().getId()) ?
+//                    user.getFirstname() + " " + user.getLastname() : null;
+
+            // Sử dụng chữ ký có sẵn nếu không gửi chữ ký mới
+            String signaturePath = user.getSignaturePath();
+            byte[] signatureData = null;
+            if (signature == null && signaturePath != null) {
+                try (FileInputStream fis = new FileInputStream(signaturePath)) {
+                    byte[] ivBytes = new byte[16];
+                    fis.read(ivBytes);
+                    byte[] encryptedData = fis.readAllBytes();
+                    byte[] keyBytes = Base64.getDecoder().decode(user.getEncryptionKey());
+                    SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+                    IvParameterSpec iv = new IvParameterSpec(ivBytes);
+                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                    cipher.init(Cipher.DECRYPT_MODE, key, iv);
+                    signatureData = cipher.doFinal(encryptedData);
+                }
+            } else if (signature != null) {
+                signatureData = signature.getBytes();
+            }
+
+            // Cập nhật PDF (giả sử PdfService có thể xử lý byte[])
+            String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, receiverName,null, true, true);
+            assignment.setPdfPath(updatedPdfPath);
+
+            if (handoverUser.getSignaturePath() != null) {
+                assignment.setStatus(AssignmentStatus.ASSIGNED);
+                assignment.getDevice().setStatus(StatusDevice.DA_SU_DUNG.name());
+            }
+            deviceAssignmentRepository.save(assignment);
+        } catch (Exception e) {
+            throw new CustomResponseException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update PDF: " + e.getMessage());
+        }
+
+        return ApiResponse.builder()
+                .success(true)
+                .message("Signature added successfully")
+                .data(null)
+                .build();
+    }
 
     // API mới: Ký hợp đồng bàn giao của bên Admin
     @PostMapping("/sign/{assignmentId}")
@@ -359,7 +460,7 @@ public class DeviceController {
             }
 
             // Cập nhật PDF (giả sử PdfService có thể xử lý byte[])
-            String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, null,null);
+            String updatedPdfPath = pdfService.updateHandoverPdf(assignment, devices, receiverName, null,null, true, false);
             assignment.setPdfPath(updatedPdfPath);
 
             if (handoverUser.getSignaturePath() != null) {

@@ -9,13 +9,11 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,7 +44,7 @@ public class PdfService {
         return PdfFontFactory.createFont(fontPath, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
     }
 
-    public String generateHandoverPdf(DeviceAssignment assignment, List<Device> devices, String receiverName, String signName, String returnConfirm) throws Exception {
+    public String generateHandoverPdf(DeviceAssignment assignment, List<Device> devices, String receiverName, String signName, String returnConfirm, boolean isFrom, boolean isTo) throws Exception {
         String fileName = "handover_" + assignment.getId() + ".pdf";
         String filePath = "Uploads/pdf/" + fileName;
 
@@ -145,13 +143,22 @@ public class PdfService {
                 .add(new Paragraph(handoverUser.getFirstname() + " " + handoverUser.getLastname()).setFont(font).setTextAlignment(TextAlignment.CENTER).setMarginTop(20))
                 .setHeight(80)
                 .setBorder(new SolidBorder(ColorConstants.BLACK, 1));
-        if (handoverUser.getSignaturePath() != null) {
+
+        if (handoverUser.getSignaturePath() != null && isFrom) {
             byte[] signatureBytes = decryptSignature(handoverUser.getSignaturePath(), handoverUser.getEncryptionKey());
             Image signatureImage = new Image(ImageDataFactory.create(signatureBytes))
                     .setWidth(100)
                     .setHeight(50)
                     .setAutoScale(false);
-            giverCell.add(signatureImage);
+
+            // Create a Div to center the image
+            Div imageDiv = new Div()
+                    .add(signatureImage)
+                    .setTextAlignment(TextAlignment.CENTER) // Center the image horizontally
+                    .setVerticalAlignment(VerticalAlignment.MIDDLE) // Center the image vertically
+                    .setMarginTop(4).setMarginLeft(60);// Add some spacing if needed
+
+            giverCell.add(imageDiv);
         }
         signatureTable.addCell(giverCell);
 
@@ -161,13 +168,23 @@ public class PdfService {
                 .add(new Paragraph(signName != null ? signName : "Chưa xác nhận").setFont(font).setTextAlignment(TextAlignment.CENTER).setMarginTop(20))
                 .setHeight(80)
                 .setBorder(new SolidBorder(ColorConstants.BLACK, 1));
-        if (receiverUser.getSignaturePath() != null) {
+
+        if (receiverUser.getSignaturePath() != null && isTo) {
             byte[] signatureBytes = decryptSignature(receiverUser.getSignaturePath(), receiverUser.getEncryptionKey());
             Image signatureImage = new Image(ImageDataFactory.create(signatureBytes))
                     .setWidth(100)
                     .setHeight(50)
                     .setAutoScale(false);
-            receiverCell.add(signatureImage);
+
+            // Create a Div to center the image
+            Div imageDiv = new Div()
+                    .add(signatureImage)
+                    .setTextAlignment(TextAlignment.CENTER) // Center the image horizontally
+                    .setVerticalAlignment(VerticalAlignment.MIDDLE) // Center the image vertically
+                    .setMarginTop(4)
+            .setMarginLeft(60);// Add some spacing if needed
+
+            receiverCell.add(imageDiv);
         }
         signatureTable.addCell(receiverCell);
 
@@ -180,14 +197,14 @@ public class PdfService {
         return filePath;
     }
 
-    public String updateHandoverPdf(DeviceAssignment assignment, List<Device> devices, String receiverName, String signName, String returnConfirm) throws Exception {
+    public String updateHandoverPdf(DeviceAssignment assignment, List<Device> devices, String receiverName, String signName, String returnConfirm, boolean isFrom, boolean isTo) throws Exception {
         File oldFile = new File(assignment.getPdfPath());
         if (oldFile.exists()) {
             if (!oldFile.delete()) {
                 throw new RuntimeException("Failed to delete old PDF file: " + oldFile.getAbsolutePath());
             }
         }
-        return generateHandoverPdf(assignment, devices, receiverName, signName, returnConfirm);
+        return generateHandoverPdf(assignment, devices, receiverName, signName, returnConfirm, isFrom, isTo);
     }
 
     public User getMyInfo() {
