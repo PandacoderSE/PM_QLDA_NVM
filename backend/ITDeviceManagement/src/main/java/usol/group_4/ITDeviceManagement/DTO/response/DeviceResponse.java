@@ -24,4 +24,5 @@ public class DeviceResponse {
     private Category category;
     private String identifyCode;
     private String status;
+    private Long assignmentId;
 }

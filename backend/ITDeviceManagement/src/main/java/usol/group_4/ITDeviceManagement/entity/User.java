@@ -26,6 +26,11 @@ public class User extends Auditable{
     private String email;
     private String phone;
     private int status;
+    @Column(name = "signature_path")
+    private String signaturePath;
+
+    @Column(name = "encryption_key")
+    private String encryptionKey; // Lưu khóa AES (mã hóa bằng bcrypt)
     @OneToMany(mappedBy = "toUser", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DeviceAssignment> deviceAssignments = new ArrayList<>();
     @OneToMany(mappedBy = "createdBy", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)

@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/owners/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
-                .antMatchers("/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return", "/api/v1/devices/{assignmentId}/download-pdf")
+                .antMatchers("api/v1/devices/sign/**","/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return", "/api/v1/devices/{assignmentId}/download-pdf")
                 .hasRole(Role.STAFF.name())
                 .antMatchers("/api/v1/devices/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .hasRole(Role.ADMIN.name())
 //                .antMatchers("/api/v1/requests/my-requests", "/api/v1/requests/create", "/api/v1/requests/{requestId}")
 //                .hasRole(Role.STAFF.name()) // Dành cho Staff
-                .antMatchers("/api/v1/requests/**")
+                .antMatchers("/api/v1/requests/**", "api/v1/devices/signature")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name(), Role.STAFF.name()) // Dành cho Admin/Manager
                 .anyRequest().authenticated().and()
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder)

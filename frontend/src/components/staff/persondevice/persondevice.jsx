@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { getToken } from "../../Services/localStorageService";
 import handleAlert from "../../Alert/handleAlert";
+import SignatureCanvas from "react-signature-canvas";
 
 const Persondevice = () => {
   const [assignments, setAssignments] = useState([]);
@@ -10,6 +11,10 @@ const Persondevice = () => {
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage] = useState(5);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [currentAssignmentId, setCurrentAssignmentId] = useState(null);
+  const sigCanvas = useRef(null);
+  const token = getToken();
 
   const handlePageClick = (data) => {
     setCurrentPage(data.selected);
@@ -18,7 +23,6 @@ const Persondevice = () => {
   const startIndex = currentPage * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentItems = assignments.slice(startIndex, endIndex);
-  const token = getToken();
 
   // Fetch assignments
   const fetchAssignments = async () => {
@@ -192,6 +196,85 @@ const Persondevice = () => {
     }
   };
 
+  // Open signature modal
+  const openSignatureModal = (assignmentId) => {
+    setCurrentAssignmentId(assignmentId);
+    setShowSignatureModal(true);
+  };
+
+  // Save signature
+  const saveSignature = async () => {
+    if (!sigCanvas.current) {
+      handleAlert("Lỗi", "Không thể truy cập canvas chữ ký!", "error");
+      return;
+    }
+    if (sigCanvas.current.isEmpty()) {
+      handleAlert("Lỗi", "Vui lòng vẽ chữ ký!", "error");
+      return;
+    }
+
+    try {
+      // Lấy dữ liệu chữ ký trực tiếp từ canvas
+      const signatureData = sigCanvas.current.toDataURL("image/png");
+      const blob = await (await fetch(signatureData)).blob();
+      const formData = new FormData();
+      formData.append("signature", blob, "signature.png");
+
+      await axios.post(
+        `http://localhost:8080/api/v1/devices/sign/${currentAssignmentId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      handleAlert("Thành công", "Chữ ký đã được lưu và hợp đồng đã được cập nhật!", "success");
+      setShowSignatureModal(false);
+      sigCanvas.current.clear();
+      fetchAssignments();
+    } catch (err) {
+      console.error("Lỗi khi lưu chữ ký:", err);
+      handleAlert("Lỗi", "Không thể lưu chữ ký!", "error");
+    }
+  };
+
+  // Signature Modal
+  const SignatureModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 className="text-lg font-bold mb-4">Vẽ chữ ký</h3>
+        <SignatureCanvas
+          ref={sigCanvas}
+          canvasProps={{ width: 400, height: 200, className: "sigCanvas border border-gray-300" }}
+        />
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={() => sigCanvas.current.clear()}
+            className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-600"
+          >
+            Xóa chữ ký
+          </button>
+          <div>
+            <button
+              onClick={() => setShowSignatureModal(false)}
+              className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 mr-2"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={saveSignature}
+              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Lưu chữ ký
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-white-100 p-1">
       <div className="container mx-auto">
@@ -328,12 +411,20 @@ const Persondevice = () => {
                     </span>
                     <div className="flex gap-2">
                       {assignment.status === "PENDING" && (
-                        <button
-                          onClick={() => handleReject(assignment.id)}
-                          className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition shadow-sm"
-                        >
-                          Từ Chối
-                        </button>
+                        <>
+                          <button
+                            onClick={() => openSignatureModal(assignment.id)}
+                            className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition shadow-sm"
+                          >
+                            Ký hợp đồng
+                          </button>
+                          <button
+                            onClick={() => handleReject(assignment.id)}
+                            className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition shadow-sm"
+                          >
+                            Từ Chối
+                          </button>
+                        </>
                       )}
                       {(assignment.status === "ASSIGNED" || assignment.status === "RETURNED") && (
                         <>
@@ -367,7 +458,7 @@ const Persondevice = () => {
           )}
         </div>
 
-        {/* Fixed Pagination (Restored Original) */}
+        {/* Fixed Pagination */}
         <div className="fixed bottom-2 right-2 bg-white py-2 px-4 rounded-lg shadow-md border border-gray-200">
           <div className="flex items-center gap-2">
             <button
@@ -429,6 +520,9 @@ const Persondevice = () => {
             </button>
           </div>
         </div>
+
+        {/* Signature Modal */}
+        {showSignatureModal && <SignatureModal />}
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ public interface IDeviceService {
 
     public List<Object[]> findDeviceByStatus(String status);
 
-    public DeviceResponse setDeviceForOwner(DeviceUserRequest deviceUserRequest);
+    public DeviceAssignmentResponse  setDeviceForOwner(DeviceUserRequest deviceUserRequest);
 
     public List<Object[]> searchDeviceByCustomField(String serialNumber, Date fromDate, Date toDate, Long categoryId, String ownerId, String status);
 

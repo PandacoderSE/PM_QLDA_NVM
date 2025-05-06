@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { getToken } from "../Services/localStorageService";
+import SignatureCanvas from "react-signature-canvas";
 
 const UserProduct = () => {
   const [step, setStep] = useState(1);
@@ -21,6 +22,10 @@ const UserProduct = () => {
   const [error, setError] = useState("");
   const [serialNumberError, setSerialNumberError] = useState("");
   const [ownerIdError, setOwnerIdError] = useState("");
+  const [assignmentIds, setAssignmentIds] = useState([]);
+  const [signedAssignments, setSignedAssignments] = useState({});
+  const [userSignature, setUserSignature] = useState(null); // Lưu chữ ký có sẵn (Base64)
+  const sigCanvas = useRef(null);
   const token = getToken();
   const MySwal = withReactContent(Swal);
 
@@ -29,7 +34,28 @@ const UserProduct = () => {
     "Thông tin nhân viên",
     "Chọn thiết bị",
     "Xác nhận bàn giao",
+    "Ký hợp đồng",
   ];
+
+  // Kiểm tra chữ ký người dùng
+  const checkUserSignature = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/v1/devices/signature",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.data.success) {
+        setUserSignature(`data:image/png;base64,${response.data.data}`);
+      } else {
+        setUserSignature(null);
+      }
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra chữ ký:", error);
+      setUserSignature(null);
+    }
+  };
 
   // Validation for username
   const validateUsername = (value) => {
@@ -99,6 +125,13 @@ const UserProduct = () => {
     fetchCategories();
   }, []);
 
+  // Kiểm tra chữ ký khi vào bước 5
+  useEffect(() => {
+    if (step === 5) {
+      checkUserSignature();
+    }
+  }, [step]);
+
   // Search employee
   const handleSearch = async () => {
     const validationError = validateUsername(username);
@@ -136,9 +169,9 @@ const UserProduct = () => {
   const handleAddDeviceForUser = async () => {
     setLoading(true);
     try {
-      await Promise.all(
-        selectedDevices.map((id) =>
-          axios.post(
+      const assignments = await Promise.all(
+        selectedDevices.map(async (id) => {
+          const response = await axios.post(
             `http://localhost:8080/api/v1/devices/set-device`,
             {
               serial_number: id,
@@ -147,15 +180,14 @@ const UserProduct = () => {
             {
               headers: { Authorization: `Bearer ${token}` },
             }
-          )
-        )
+          );
+          return response.data.data.id;
+        })
       );
+      console.log(assignments);
+      setAssignmentIds(assignments);
       MySwal.fire("Thành công", "Bàn giao thiết bị thành công!", "success");
-      setStep(1);
-      setUsername("");
-      setUserInfo(null);
-      setSelectedDevices([]);
-      setDeviceList([]);
+      setStep(5);
     } catch (error) {
       if (error.response?.status === 409) {
         MySwal.fire({
@@ -167,9 +199,9 @@ const UserProduct = () => {
           cancelButtonText: "Hủy",
         }).then(async (result) => {
           if (result.isConfirmed) {
-            await Promise.all(
-              selectedDevices.map((id) =>
-                axios.post(
+            const assignments = await Promise.all(
+              selectedDevices.map(async (id) => {
+                const response = await axios.post(
                   `http://localhost:8080/api/v1/devices/transfer-device`,
                   {
                     serial_number: id,
@@ -178,15 +210,13 @@ const UserProduct = () => {
                   {
                     headers: { Authorization: `Bearer ${token}` },
                   }
-                )
-              )
+                );
+                return response.data.data.id;
+              })
             );
+            setAssignmentIds(assignments);
             MySwal.fire("Thành công", "Bàn giao thiết bị thành công!", "success");
-            setStep(1);
-            setUsername("");
-            setUserInfo(null);
-            setSelectedDevices([]);
-            setDeviceList([]);
+            setStep(5);
           }
         });
       } else {
@@ -270,6 +300,116 @@ const UserProduct = () => {
       setSelectedDevices([]);
     } catch (error) {
       MySwal.fire("Lỗi", "Không thể tìm kiếm thiết bị!", "error");
+    }
+  };
+
+  // Save signature
+  const saveSignature = async (assignmentId, useExisting = false) => {
+    try {
+      if (useExisting) {
+        // Sử dụng chữ ký có sẵn
+        const response = await axios.post(
+          `http://localhost:8080/api/v1/devices/sign/${assignmentId}`,
+          {}, // Không gửi chữ ký
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data.success) {
+          setSignedAssignments((prev) => ({
+            ...prev,
+            [assignmentId]: userSignature, // Lưu chữ ký để hiển thị
+          }));
+          MySwal.fire("Thành công", "Bàn giao thành công!", "success");
+          // fetchAssignments();
+        } else {
+          MySwal.fire("Lỗi", "API trả về không thành công!", "error");
+        }
+      } else {
+        // Vẽ chữ ký mới
+        if (!sigCanvas.current) {
+          MySwal.fire("Lỗi", "Không thể truy cập canvas chữ ký!", "error");
+          return;
+        }
+        if (sigCanvas.current.isEmpty()) {
+          MySwal.fire("Lỗi", "Vui lòng vẽ chữ ký!", "error");
+          return;
+        }
+
+        const signatureData = sigCanvas.current.toDataURL("image/png");
+        console.log("Signature Data URL:", signatureData);
+        const response = await fetch(signatureData);
+        if (!response.ok) {
+          throw new Error("Không thể chuyển đổi dữ liệu chữ ký thành Blob");
+        }
+        const blob = await response.blob();
+        const formData = new FormData();
+        formData.append("signature", blob, "signature.png");
+
+        const apiResponse = await axios.post(
+          `http://localhost:8080/api/v1/devices/sign/${assignmentId}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (apiResponse.data.success) {
+          setSignedAssignments((prev) => ({
+            ...prev,
+            [assignmentId]: signatureData,
+          }));
+          setUserSignature(signatureData); // Cập nhật chữ ký có sẵn
+          MySwal.fire("Thành công", "Bàn giao thành công!", "success");
+          sigCanvas.current.clear();
+          // fetchAssignments();
+        } else {
+          MySwal.fire("Lỗi", "API trả về không thành công!", "error");
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi lưu chữ ký:", error);
+      MySwal.fire("Lỗi", `Không thể lưu chữ ký: ${error.message}`, "error");
+    }
+  };
+
+  // Fetch assignments for signed status
+  const fetchAssignments = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/v1/devices/assignments",
+        {
+          params: { status: "PENDING" },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setAssignmentIds(response.data.data.map((assignment) => assignment.id));
+    } catch (error) {
+      MySwal.fire("Lỗi", "Không thể tải danh sách bàn giao!", "error");
+    }
+  };
+
+  // View PDF
+  const viewPdf = async (assignmentId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/v1/devices/${assignmentId}/download-pdf`,
+        {
+          responseType: "blob",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      window.open(url, "_blank");
+      window.URL.revokeObjectURL(url);
+      MySwal.fire("Thành công", "Đã mở biên bản bàn giao!", "success");
+    } catch (error) {
+      MySwal.fire("Lỗi", "Không thể mở biên bản bàn giao!", "error");
     }
   };
 
@@ -545,12 +685,6 @@ const UserProduct = () => {
               >
                 Xóa bàn giao
               </button>
-              {/* <button
-                onClick={handleAddDeviceForUser}
-                className="py-2 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-              >
-                Bàn giao thiết bị
-              </button> */}
             </>
           ) : (
             <>
@@ -560,12 +694,6 @@ const UserProduct = () => {
               >
                 Xóa bàn giao
               </button>
-              {/* <button
-                disabled
-                className="py-2 px-4 bg-gray-300 text-white rounded-md"
-              >
-                Bàn giao thiết bị
-              </button> */}
             </>
           )}
         </div>
@@ -702,6 +830,131 @@ const UserProduct = () => {
     </div>
   );
 
+  const renderStep5 = () => (
+    <div className="bg-white p-6 rounded-lg shadow-md w-full h-[calc(100vh-96px)] no-scrollbar">
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        Bước 5: Ký hợp đồng
+      </h2>
+      <div>
+        <h3 className="text-lg font-bold">Danh sách bàn giao:</h3>
+        {assignmentIds.length > 0 ? (
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2 text-left">STT</th>
+                <th className="border border-gray-300 p-2 text-left">Mã bàn giao</th>
+                <th className="border border-gray-300 p-2 text-left">Người bàn giao</th>
+                <th className="border border-gray-300 p-2 text-left">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignmentIds.map((id, index) => (
+                <tr key={id}>
+                  <td className="border border-gray-300 p-2">{index + 1}</td>
+                  <td className="border border-gray-300 p-2">{id}</td>
+                  <td className="border border-gray-300 p-2">
+                    {signedAssignments[id] ? (
+                      <img
+                        src={signedAssignments[id]}
+                        alt="Chữ ký"
+                        className="h-10 w-auto"
+                      />
+                    ) : (
+                      <span className="text-gray-500">Chưa ký</span>
+                    )}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <button
+                      onClick={() => viewPdf(id)}
+                      className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 mr-2"
+                    >
+                      Xem PDF
+                    </button>
+                    {userSignature && !signedAssignments[id] ? (
+                      <>
+                        <button
+                          onClick={() => saveSignature(id, true)}
+                          className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 mr-2"
+                        >
+                          Sử dụng chữ ký hiện tại
+                        </button>
+                        <button
+                          onClick={() => saveSignature(id, false)}
+                          className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700"
+                        >
+                          Vẽ chữ ký mới
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => saveSignature(id, false)}
+                        className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700"
+                        disabled={signedAssignments[id]}
+                      >
+                        Ký
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-gray-500">Không có bàn giao nào.</p>
+        )}
+      </div>
+      <div className="mt-4">
+        <h3 className="text-lg font-bold">Chữ ký:</h3>
+        {userSignature ? (
+          <div>
+            <img
+              src={userSignature}
+              alt="Chữ ký hiện tại"
+              className="border border-gray-300 mb-4"
+              style={{ width: "500px", height: "200px", objectFit: "contain" }}
+            />
+          </div>
+        ) : (
+          <div>
+            <SignatureCanvas
+              ref={sigCanvas}
+              canvasProps={{ width: 500, height: 200, className: "sigCanvas border border-gray-300" }}
+            />
+            <button
+              onClick={() => sigCanvas.current.clear()}
+              className="mt-2 bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700"
+            >
+              Xóa chữ ký
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="flex justify-between mt-6">
+        <button
+          onClick={() => setStep(4)}
+          className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+        >
+          Quay lại
+        </button>
+        <button
+          onClick={() => {
+            setStep(1);
+            setUsername("");
+            setUserInfo(null);
+            setSelectedDevices([]);
+            setDeviceList([]);
+            setAssignmentIds([]);
+            setSignedAssignments({});
+            setUserSignature(null);
+          }}
+          className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Hoàn tất
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full h-screen bg-gray-100 flex flex-col">
       <style jsx>{`
@@ -719,6 +972,7 @@ const UserProduct = () => {
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
         {step === 4 && renderStep4()}
+        {step === 5 && renderStep5()}
       </div>
     </div>
   );
