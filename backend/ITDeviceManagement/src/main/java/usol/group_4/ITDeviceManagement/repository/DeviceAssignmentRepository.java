@@ -1,8 +1,10 @@
 package usol.group_4.ITDeviceManagement.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.entity.DeviceAssignment;
 
@@ -11,6 +13,10 @@ import java.util.Optional;
 
 public interface DeviceAssignmentRepository extends JpaRepository<DeviceAssignment, Long> {
     Optional<DeviceAssignment> findById(Long id);
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM DeviceAssignment da WHERE da.device.id IN :deviceIds")
+    void deleteAllByDeviceIdInBatch(@Param("deviceIds") List<Long> deviceIds);
     List<DeviceAssignment> findByDeviceIdOrderByHandoverDateDesc(Long deviceId);
     Optional<DeviceAssignment> findTopByDeviceIdOrderByHandoverDateDesc(Long deviceId);
     List<DeviceAssignment> findByToUserIdAndStatus(String toUserId, AssignmentStatus status);

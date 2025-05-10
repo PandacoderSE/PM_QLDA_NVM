@@ -186,38 +186,14 @@ const UserProduct = () => {
       );
       console.log(assignments);
       setAssignmentIds(assignments);
-      MySwal.fire("Thành công", "Bàn giao thiết bị thành công!", "success");
       setStep(5);
     } catch (error) {
       if (error.response?.status === 409) {
         MySwal.fire({
           title: "Thiết bị đã được sử dụng",
-          text: `Bạn có muốn chuyển giao thiết bị này cho nhân viên ${username}?`,
+          text: `Vui lòng chuyển đổi trạng thái thiết bị trước khi bàn giao cho nhân viên ${username}?`,
           icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Đồng ý",
-          cancelButtonText: "Hủy",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            const assignments = await Promise.all(
-              selectedDevices.map(async (id) => {
-                const response = await axios.post(
-                  `http://localhost:8080/api/v1/devices/transfer-device`,
-                  {
-                    serial_number: id,
-                    owner_id: username,
-                  },
-                  {
-                    headers: { Authorization: `Bearer ${token}` },
-                  }
-                );
-                return response.data.data.id;
-              })
-            );
-            setAssignmentIds(assignments);
-            MySwal.fire("Thành công", "Bàn giao thiết bị thành công!", "success");
-            setStep(5);
-          }
+          cancelButtonText: "OK",
         });
       } else {
         MySwal.fire("Lỗi", "Không thể bàn giao thiết bị!", "error");
@@ -380,7 +356,7 @@ const UserProduct = () => {
           await saveSignature(assignmentId, useExisting);
         }
       }
-      MySwal.fire("Thành công", "Đã ký tất cả bàn giao thành công!", "success");
+      MySwal.fire("Thành công", "Đã ký và bàn giao thành công!", "success");
     } catch (error) {
       MySwal.fire("Lỗi", `Lỗi khi ký bàn giao: ${error.message}`, "error");
     }
@@ -415,7 +391,6 @@ const UserProduct = () => {
       const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
       window.open(url, "_blank");
       window.URL.revokeObjectURL(url);
-      MySwal.fire("Thành công", "Đã mở biên bản bàn giao!", "success");
     } catch (error) {
       MySwal.fire("Lỗi", "Không thể mở biên bản bàn giao!", "error");
     }
@@ -514,7 +489,7 @@ const UserProduct = () => {
               {userInfo.name || "Chưa có dữ liệu"}
             </p>
             <p className="text-lg">
-              <span className="font-bold">Phòng ban:</span> Dev
+              <span className="font-bold">Công ty:</span> NmaxSoft 
             </p>
           </div>
           <div className="mt-4">
@@ -716,6 +691,9 @@ const UserProduct = () => {
                   Serial Number
                 </th>
                 <th className="border border-gray-300 p-2 text-left">
+                  Tên vật tư
+                </th>
+                <th className="border border-gray-300 p-2 text-left">
                   Tên danh mục
                 </th>
                 <th className="border border-gray-300 p-2 text-left">
@@ -736,10 +714,11 @@ const UserProduct = () => {
                   </td>
                   <td className="border border-gray-300 p-2">{device[0]}</td>
                   <td className="border border-gray-300 p-2">{device[1]}</td>
+                  <td className="border border-gray-300 p-2">{device[2]}</td>
                   <td className="border border-gray-300 p-2">
-                    {device[5] === "DA_SU_DUNG" ? (
+                    {device[6] === "DA_SU_DUNG" ? (
                       <span className="text-green-500">Đã sử dụng</span>
-                    ) : device[5] === "CHO_XAC_NHAN" ? (
+                    ) : device[6] === "CHO_XAC_NHAN" ? (
                       <span className="text-yellow-500">Chờ xác nhận</span>
                     ) : (
                       <span className="text-red-500">Chưa sử dụng</span>
@@ -914,12 +893,6 @@ const UserProduct = () => {
         )}
       </div>
       <div className="flex justify-between mt-6">
-        <button
-          onClick={() => setStep(4)}
-          className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-        >
-          Quay lại
-        </button>
         <div className="flex gap-2">
           {userSignature ? (
             <button

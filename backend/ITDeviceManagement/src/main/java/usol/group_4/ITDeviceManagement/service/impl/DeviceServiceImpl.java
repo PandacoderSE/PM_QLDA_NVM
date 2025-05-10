@@ -157,6 +157,7 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public void deleteDevice(List<Long> ids) {
         ids.forEach(this::checkDeviceExistence);
+        deviceAssignmentRepository.deleteAllByDeviceIdInBatch(ids);
         deviceRepository.deleteAllByIdInBatch(ids);
     }
 
@@ -266,7 +267,12 @@ public class DeviceServiceImpl implements IDeviceService {
         }
 
         List<DeviceAssignment> assignments = deviceAssignmentRepository.findByDeviceIdOrderByHandoverDateDesc(device.getId());
-        if (!assignments.isEmpty() && assignments.get(0).getStatus() == AssignmentStatus.ASSIGNED) {
+        if (!assignments.isEmpty() &&
+                assignments.stream().anyMatch(assignment ->
+                        assignment.getStatus() == AssignmentStatus.ASSIGNED ||
+                                assignment.getStatus() == AssignmentStatus.PENDING) &&
+                (device.getStatus().equals(StatusDevice.DA_SU_DUNG.name()) ||
+                        device.getStatus().equals(StatusDevice.CHO_XAC_NHAN.name()))) {
             throw new CustomResponseException(HttpStatus.CONFLICT, ErrorCode.USED_DEVICE.getMessage());
         }
 

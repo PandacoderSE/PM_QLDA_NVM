@@ -87,7 +87,7 @@ public class PdfService {
         infoTable.addCell(new Cell().add(new Paragraph(String.valueOf(assignment.getId())).setFont(font)).setBorder(Border.NO_BORDER));
         String handoverDate = assignment.getHandoverDate() != null ? assignment.getHandoverDate().toString() : "N/A";
         infoTable.addCell(new Cell().add(new Paragraph("Ngày bàn giao:").setFont(font).setBold()).setBorder(Border.NO_BORDER));
-        infoTable.addCell(new Cell().add(new Paragraph(handoverDate).setFont(font)).setBorder(Border.NO_BORDER));
+        infoTable.addCell(new Cell().add(new Paragraph(handoverDate.split("T")[0]).setFont(font)).setBorder(Border.NO_BORDER));
         infoTable.addCell(new Cell().add(new Paragraph("Người nhận:").setFont(font).setBold()).setBorder(Border.NO_BORDER));
         infoTable.addCell(new Cell().add(new Paragraph(receiverName != null ? receiverName : "Chưa xác nhận").setFont(font)).setBorder(Border.NO_BORDER));
 

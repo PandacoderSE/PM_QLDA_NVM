@@ -34,7 +34,7 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     @Query("SELECT c.id, c.name, COUNT(d) " + "FROM Device d " + "INNER JOIN d.category c " + "GROUP BY c.id, c.name")
     List<Object[]> findDeviceQuantityByCategory();
 
-    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, da.toUser.id, d.status " +
+    @Query("SELECT d.serialNumber,d.manufacture, d.category.name, d.specification, d.purchaseDate, da.toUser.id, d.status " +
             "FROM Device d " +
             "LEFT JOIN DeviceAssignment da ON d.id = da.device.id " +
             "AND da.id = (SELECT MAX(da2.id) FROM DeviceAssignment da2 WHERE da2.device.id = d.id AND da2.status IN ('ASSIGNED', 'PENDING')) " +
@@ -55,7 +55,7 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
 //                                  @Param("ownerId") String ownerId,
 //                                  @Param("status") String status
 //    );
-        @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, da.toUser.id, d.status " +
+        @Query("SELECT d.serialNumber,d.manufacture, d.category.name, d.specification, d.purchaseDate, da.toUser.id, d.status " +
                 "FROM Device d " +
                 "LEFT JOIN DeviceAssignment da ON d.id = da.device.id " +
                 "AND da.id = (SELECT MAX(da2.id) FROM DeviceAssignment da2 WHERE da2.device.id = d.id AND da2.status = 'ASSIGNED') " +
@@ -78,7 +78,7 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     @Query("UPDATE Device d SET d.category = null WHERE d.category.id = :categoryId")
     void updateCategoryIdToNull(@Param("categoryId") Long categoryId);
 
-    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.status, d.accountingCode, d.identifyCode FROM Device d  WHERE d.serialNumber = :serialNumber")
+    @Query("SELECT d.serialNumber,d.manufacture, d.category.name, d.specification, d.purchaseDate, d.status, d.accountingCode, d.identifyCode FROM Device d  WHERE d.serialNumber = :serialNumber")
     List<Object[]> getDeviceBySerialNum(String serialNumber);
 
 

@@ -54,6 +54,7 @@ public class EmailService {
 
     // Tách logic tạo HTML content ra để tái sử dụng
     private String buildHtmlContent(String content, LocalDateTime createdDate) {
+        var createD = (createdDate.toString()).split("T")[0];
         return String.format(
                 "<html>" +
                         "<head>" +
@@ -116,12 +117,12 @@ public class EmailService {
                         "    <div class=\"signature\">" +
                         "        <div class=\"company\">Công ty NMaxsoft</div>" +
                         "        <div class=\"contact\">Điện thoại: 0852608689</div>" +
-                        "        <div class=\"contact\">Địa chỉ: Chợ Nhổn, QL32, Nam Từ Liêm, Hà Nội</div>" +
+                        "        <div class=\"contact\">Địa chỉ: QL32, Nam Từ Liêm, Hà Nội</div>" +
                         "    </div>" +
                         "</div>" +
                         "</body>" +
                         "</html>",
-                content, createdDate
+                content, createD
         );
     }
 }

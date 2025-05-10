@@ -120,15 +120,22 @@ const SearchDevice = () => {
     const deviceIds = selectedDeviceIds.map((id) => parseInt(id));
     if (deviceIds.length === 0) {
       showAlert("Chưa thiết bị nào được chọn", "error");
-      throw new Error("Chưa thiết bị nào được chọn!");
+      return; // Dừng lại nếu không có thiết bị nào được chọn
     }
-    await deviceService
-      .deleteDevice(deviceIds)
-      .catch((error) => console.error(error));
-    const request = getRequest();
-    fetchDeviceData(request);
-    setTableKey(Date.now());
-    setSelectedDeviceIds([]);
+  
+    try {
+      await deviceService.deleteDevice(deviceIds);
+      showAlert("Xóa thành công!", "success"); // Hiển thị thông báo thành công
+      const request = getRequest();
+      fetchDeviceData(request); // Làm mới dữ liệu
+      setTableKey(Date.now()); // Cập nhật bảng
+      setSelectedDeviceIds([]); // Xóa danh sách đã chọn
+    } catch (error: any) {
+      console.error("Delete error:", error);
+      // Hiển thị thông báo lỗi từ server hoặc mặc định
+      const errorMessage = error.message || "Xóa thất bại, vui lòng thử lại.";
+      showAlert(errorMessage, "error");
+    }
   };
 
   const getRequest = () => {

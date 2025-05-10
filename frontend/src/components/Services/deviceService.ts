@@ -83,9 +83,11 @@ const updateDevice = async (
 const deleteDevice = async (ids: number[]): Promise<void> => {
   try {
     await api.del<void>("api/v1/devices/delete", ids);
-  } catch (error) {
-    console.error("Error delete device:", error);
-    throw error;
+  } catch (error : any) {
+    if (error.response?.status === 500) {
+      const errorMessage = error.response?.data?.message || "Thiết bị đã có người sử dụng, không thể xóa.";
+      throw new Error(errorMessage);
+    }
   }
 };
 

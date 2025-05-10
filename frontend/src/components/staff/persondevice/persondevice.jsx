@@ -400,16 +400,6 @@ const Persondevice = () => {
           )}
         </div>
         <div className="flex justify-between">
-          <button
-            onClick={() => {
-              setIsSigning(false);
-              setApprovedAssignmentIds([]);
-              if (sigCanvas.current) sigCanvas.current.clear();
-            }}
-            className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-          >
-            Quay lại
-          </button>
           {userSignature ? (
             <button
               onClick={() => handleSignAll(true)}
@@ -528,7 +518,7 @@ const Persondevice = () => {
                       </h3>
                       <div className="w-full h-0.5 bg-orange-500 mt-2 mb-3"></div>
                       <p className="text-sm text-gray-600">
-                        Nhà Sản Xuất: {assignment.manufacturer}
+                        Tên Vật Tư: {assignment.manufacturer}
                       </p>
                       <p className="text-sm text-gray-600">Người Bàn Giao: admin</p>
                       <p className="text-sm text-gray-600">

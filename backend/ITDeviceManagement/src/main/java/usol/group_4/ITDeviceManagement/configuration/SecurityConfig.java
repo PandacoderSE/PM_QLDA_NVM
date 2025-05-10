@@ -20,7 +20,7 @@ import usol.group_4.ITDeviceManagement.constant.Role;
 public class SecurityConfig {
     @Autowired
     private CustomJwtDecoder jwtDecoder;
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/refresh", "api/v1/devices/sign-staff/{assignmentId}", "api/v1/devices/signature"};
+    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/refresh", "api/v1/devices/sign-staff/{assignmentId}","/api/v1/devices/{assignmentId}/download-pdf", "api/v1/devices/signature"};
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/owners/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
-                .antMatchers("/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return", "/api/v1/devices/{assignmentId}/download-pdf")
+                .antMatchers("/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return")
                 .hasRole(Role.STAFF.name())
                 .antMatchers("/api/v1/devices/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name(), Role.STAFF.name())
