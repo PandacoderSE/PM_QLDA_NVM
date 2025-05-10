@@ -34,26 +34,47 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     @Query("SELECT c.id, c.name, COUNT(d) " + "FROM Device d " + "INNER JOIN d.category c " + "GROUP BY c.id, c.name")
     List<Object[]> findDeviceQuantityByCategory();
 
-    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.owner_id, d.status FROM Device d INNER JOIN Category c ON d.category.id = c.id WHERE d.status = :status")
-    List<Object[]> findByStatus(String status);
+    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, da.toUser.id, d.status " +
+            "FROM Device d " +
+            "LEFT JOIN DeviceAssignment da ON d.id = da.device.id " +
+            "AND da.id = (SELECT MAX(da2.id) FROM DeviceAssignment da2 WHERE da2.device.id = d.id AND da2.status IN ('ASSIGNED', 'PENDING')) " +
+            "WHERE d.status = :status")
+    List<Object[]> findByStatus(@Param("status") String status);
 
     @Query("SELECT d FROM Device d WHERE d.owner_id = :owner_id")
     Device checkExistOwner(String owner_id);
 
-    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.owner_id, d.status  FROM Device d WHERE (:serialNumber IS NULL OR d.serialNumber = :serialNumber) "
-            + "AND (:fromDate IS NULL OR d.purchaseDate >= :fromDate) " + "AND (:toDate IS NULL OR d.purchaseDate <= :toDate) "
-            + "AND (:categoryId IS NULL OR d.category.id = :categoryId) "
-            + "AND (:ownerId IS NULL OR d.owner_id = :ownerId) "
-            + "AND (:status IS NULL OR d.status = :status)"
-    )
-    List<Object[]> findByCriteria(@Param("serialNumber") String serialNumber,
-                                  @Param("fromDate") Date fromDate,
-                                  @Param("toDate") Date toDate,
-                                  @Param("categoryId") Long categoryId,
-                                  @Param("ownerId") String ownerId,
-                                  @Param("status") String status
-    );
-
+//    @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, d.owner_id, d.status  FROM Device d WHERE (:serialNumber IS NULL OR d.serialNumber = :serialNumber) "
+//            + "AND (:fromDate IS NULL OR d.purchaseDate >= :fromDate) " + "AND (:toDate IS NULL OR d.purchaseDate <= :toDate) "
+//            + "AND (:categoryId IS NULL OR d.category.id = :categoryId) "
+//            + "AND (:ownerId IS NULL OR d.owner_id = :ownerId) "
+//            + "AND (:status IS NULL OR d.status = :status)"
+//    )
+//    List<Object[]> findByCriteria(@Param("serialNumber") String serialNumber,
+//                                  @Param("fromDate") Date fromDate,
+//                                  @Param("toDate") Date toDate,
+//                                  @Param("categoryId") Long categoryId,
+//                                  @Param("ownerId") String ownerId,
+//                                  @Param("status") String status
+//    );
+        @Query("SELECT d.serialNumber, d.category.name, d.specification, d.purchaseDate, da.toUser.id, d.status " +
+                "FROM Device d " +
+                "LEFT JOIN DeviceAssignment da ON d.id = da.device.id " +
+                "AND da.id = (SELECT MAX(da2.id) FROM DeviceAssignment da2 WHERE da2.device.id = d.id AND da2.status = 'ASSIGNED') " +
+                "WHERE (:serialNumber IS NULL OR d.serialNumber = :serialNumber) " +
+                "AND (:fromDate IS NULL OR d.purchaseDate >= :fromDate) " +
+                "AND (:toDate IS NULL OR d.purchaseDate <= :toDate) " +
+                "AND (:categoryId IS NULL OR d.category.id = :categoryId) " +
+                "AND (:ownerId IS NULL OR da.toUser.id = :ownerId) " +
+                "AND (:status IS NULL OR d.status = :status)")
+        List<Object[]> findByCriteria(
+                @Param("serialNumber") String serialNumber,
+                @Param("fromDate") Date fromDate,
+                @Param("toDate") Date toDate,
+                @Param("categoryId") Long categoryId,
+                @Param("ownerId") String ownerId, // Sửa thành Long vì userId là Long
+                @Param("status") String status
+        );
     @Modifying
     @Transactional
     @Query("UPDATE Device d SET d.category = null WHERE d.category.id = :categoryId")

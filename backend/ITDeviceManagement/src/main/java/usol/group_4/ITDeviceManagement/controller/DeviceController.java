@@ -2,6 +2,7 @@ package usol.group_4.ITDeviceManagement.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,9 +14,12 @@ import usol.group_4.ITDeviceManagement.DTO.request.DeviceListRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUpdateRequest;
 import usol.group_4.ITDeviceManagement.DTO.request.DeviceUserRequest;
 import usol.group_4.ITDeviceManagement.DTO.response.ApiResponse;
+import usol.group_4.ITDeviceManagement.DTO.response.DeviceAssignmentResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.DeviceResponse;
 import usol.group_4.ITDeviceManagement.DTO.response.PageResponse;
+import usol.group_4.ITDeviceManagement.constant.AssignmentStatus;
 import usol.group_4.ITDeviceManagement.entity.Device;
+import usol.group_4.ITDeviceManagement.exception.CustomResponseException;
 import usol.group_4.ITDeviceManagement.service.IDeviceService;
 
 import java.io.ByteArrayOutputStream;
@@ -179,7 +183,7 @@ public class DeviceController {
     public ApiResponse<?> getDeviceBySerialNumber(@PathVariable String serialNumber) {
         return ApiResponse.builder().success(true).message("Get successfully").data(deviceService.getDeviceBySerialNum(serialNumber)).build();
     }
-
+    // hàm bàn giao
     @PostMapping("/set-device")
     public ApiResponse<?> setOwnerIdForDevice(@RequestBody DeviceUserRequest deviceUserRequest) {
         return ApiResponse.builder().success(true).message("Get successfully").data(deviceService.setDeviceForOwner(deviceUserRequest)).build();
@@ -199,6 +203,60 @@ public class DeviceController {
     public ApiResponse<?> transferUsedDevice(@PathVariable String serialNumber) {
         return ApiResponse.builder().success(true).message("Get successfully").data(deviceService.transferEmptyStatusDevice(serialNumber)).build();
     }
+    // ng dùng click approve thì mới là assigned
+    @PostMapping("/approve-assignment")
+    public ApiResponse<?> approveDeviceAssignment(
+            @RequestBody List<Long> deviceIds) {
+        List<DeviceResponse> response = deviceService.approveDeviceAssignment(deviceIds);
+        return ApiResponse.builder().success(true).message("Get successfully").data(response).build();
+    }
+    // Lấy tất cả hoặc tìm kiếm vật tư bàn giao
+    @GetMapping("/assignments")
+    public ApiResponse<?> getUserAssignments(
+            @RequestParam(required = false) AssignmentStatus status,
+            @RequestParam(required = false) String serialNumber) {
+        List<DeviceAssignmentResponse> assignments = deviceService.getAssignmentsByUserId(status, serialNumber);
+        return ApiResponse.builder()
+                .success(true)
+                .message("Get assignments successfully")
+                .data(assignments)
+                .build();
+    }
+    // API mới: Từ chối bàn giao (xóa bản ghi)
+    @PostMapping("/assignments/reject")
+    public ApiResponse<?> rejectDeviceAssignment(@RequestParam Long assignmentId) {
+        DeviceAssignmentResponse response = deviceService.rejectDeviceAssignment(assignmentId);
+        return ApiResponse.builder()
+                .success(true)
+                .message("Assignment rejected and deleted successfully")
+                .data(response)
+                .build();
+    }
 
+    // API mới: Trả lại vật tư (set trạng thái RETURNED)
+    @PostMapping("/assignments/return")
+    public ApiResponse<?> returnDeviceAssignment(@RequestParam Long assignmentId) {
+        DeviceAssignmentResponse response = deviceService.returnDeviceAssignment(assignmentId);
+        return ApiResponse.builder()
+                .success(true)
+                .message("Assignment returned successfully")
+                .data(response)
+                .build();
+    }
+    @GetMapping("/{assignmentId}/download-pdf")
+    public ResponseEntity<?> downloadHandoverPdf(
+            @PathVariable Long assignmentId){ // Token để xác thực user
+        try {
 
+            FileSystemResource fileResource = deviceService.downloadHandoverPdf(assignmentId);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=" + fileResource.getFilename())
+                    .body(fileResource);
+        } catch (Exception e) {
+            return ResponseEntity.status(e instanceof CustomResponseException
+                            ? ((CustomResponseException) e).getStatus()
+                            : HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi tải file PDF: " + e.getMessage());
+        }
+    }
 }

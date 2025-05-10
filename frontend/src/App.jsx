@@ -28,6 +28,9 @@ import Footer from "./components/Default/Footer";
 import MainLayout from "./components/Default/MainLayout";
 import Page404 from "./components/Error/Page404";
 import Page403 from "./components/Error/Page403";
+import persondevice from "./components/staff/persondevice/persondevice";
+import feedback from "./components/staff/feedback/feedback";
+import feedbackmanagement from "./components/FeedBackManagement/feedBackManagement";
 
 const PrivateRoute = ({ element: Component, ...rest }) => {
   const token = getToken();
@@ -163,6 +166,18 @@ function App() {
             <Route
               path="/notification"
               element={<PrivateRoute element={NotificationManagement} />}
+            />
+            <Route
+              path="/personal-device"
+              element={<PrivateRoute element={persondevice} />}
+            />
+            <Route
+              path="/feedback"
+              element={<PrivateRoute element={feedback} />}
+            />
+            <Route
+              path="/feedbackmanagement"
+              element={<PrivateRoute element={feedbackmanagement} />}
             />
           </Route>
           <Route path="*" element={<Page404 />} />

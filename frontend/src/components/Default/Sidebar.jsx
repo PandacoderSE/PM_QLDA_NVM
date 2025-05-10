@@ -21,7 +21,9 @@ import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ChevronDownIcon,
-  BellIcon
+  BellIcon,
+  BriefcaseIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/solid";
 
 import i18n from "../../i18n/i18n";
@@ -73,6 +75,7 @@ function Sidebar({
         }
       );
       setRoles(response.data.data);
+      console.log(roles);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -80,7 +83,7 @@ function Sidebar({
   useEffect(() => {
     fetchRoles();
   }, []);
-  
+
   useEffect(() => {
     const savedSelected = sessionStorage.getItem("selected");
     setCurrentSelected(savedSelected !== null ? savedSelected : "home");
@@ -99,7 +102,7 @@ function Sidebar({
         <div>
           <div className="mb-2 flex items-center justify-between p-4">
             <img
-              src="https://img.upanh.tv/2025/03/20/NMAXSOFT-2.png" 
+              src="https://img.upanh.tv/2025/03/20/NMAXSOFT-2.png"
               alt="Logo"
               className={`transition-all duration-200 ${
                 isDrawerOpen ? "block" : "hidden"
@@ -150,7 +153,9 @@ function Sidebar({
                 navigate("/home");
               }}
               className={`${
-                currentSelected === "home" ? "bg-sidebar-color text-sidebar-color" : ""
+                currentSelected === "home"
+                  ? "bg-sidebar-color text-sidebar-color"
+                  : ""
               }`}
             >
               <ListItemPrefix>
@@ -169,25 +174,120 @@ function Sidebar({
                 {t("homePage")}
               </Typography>
             </ListItem>
+            {(roles.includes("ADMIN") || roles.includes("MANAGE")) && (
+              <>
+                <Accordion
+                  open={isOpen}
+                  icon={
+                    <ChevronDownIcon
+                      strokeWidth={2.5}
+                      className={`mx-auto h-4 w-4 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                      } ${isDrawerOpen ? "block" : "hidden"}`}
+                    />
+                  }
+                >
+                  <ListItem className="p-0" selected={isOpen}>
+                    <AccordionHeader
+                      onClick={() => handleOpen()}
+                      className="border-b-0 p-3"
+                    >
+                      <ListItemPrefix>
+                        <ClipboardDocumentIcon
+                          className={`transition-all duration-200 ${
+                            isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                          }`}
+                        />
+                      </ListItemPrefix>
+                      <Typography
+                        variant="h6"
+                        color="blue-gray"
+                        className={`transition-all duration-200 mr-auto ${
+                          isDrawerOpen ? "block" : "hidden"
+                        } ease-in-out`}
+                      >
+                        {t("materials-management")}
+                      </Typography>
+                    </AccordionHeader>
+                  </ListItem>
+                  <AccordionBody className="py-1">
+                    <List className="p-0">
+                      <ListItem
+                        selected={currentSelected === "product"}
+                        onClick={() => {
+                          handleSelect("product");
+                          navigate("/product");
+                        }}
+                        className={`${
+                          currentSelected === "product"
+                            ? "bg-sidebar-color text-sidebar-color"
+                            : ""
+                        }`}
+                      >
+                        <ListItemPrefix>
+                          <ChevronRightIcon
+                            strokeWidth={3}
+                            className={`transition-all duration-200 ${
+                              isDrawerOpen ? "h-3 w-5" : "h-3 w-5"
+                            }`}
+                          />
+                        </ListItemPrefix>
+                        <Typography
+                          variant="h6"
+                          className={`transition-all duration-200 ${
+                            isDrawerOpen ? "block" : "hidden"
+                          } ease-in-out`}
+                        >
+                          {t("list-materials")}
+                        </Typography>
+                      </ListItem>
+                      <ListItem
+                        selected={currentSelected === "assign-device"}
+                        onClick={() => {
+                          handleSelect("assign-device");
+                          navigate("/assign-device");
+                        }}
+                        className={`${
+                          currentSelected === "assign-device"
+                            ? "bg-sidebar-color text-sidebar-color"
+                            : ""
+                        }`}
+                      >
+                        <ListItemPrefix>
+                          <ChevronRightIcon
+                            strokeWidth={3}
+                            className={`transition-all duration-200 ${
+                              isDrawerOpen ? "h-3 w-5" : "h-3 w-5"
+                            }`}
+                          />
+                        </ListItemPrefix>
+                        <Typography
+                          variant="h6"
+                          className={`transition-all duration-200 ${
+                            isDrawerOpen ? "block" : "hidden"
+                          } ease-in-out`}
+                        >
+                          {t("equip-handover")}
+                        </Typography>
+                      </ListItem>
+                    </List>
+                  </AccordionBody>
+                </Accordion>
 
-            <Accordion
-              open={isOpen}
-              icon={
-                <ChevronDownIcon
-                  strokeWidth={2.5}
-                  className={`mx-auto h-4 w-4 transition-transform duration-200 ${
-                    isOpen ? "rotate-180" : ""
-                  } ${isDrawerOpen ? "block" : "hidden"}`}
-                />
-              }
-            >
-              <ListItem className="p-0" selected={isOpen}>
-                <AccordionHeader
-                  onClick={() => handleOpen()}
-                  className="border-b-0 p-3"
+                <ListItem
+                  selected={currentSelected === "category"}
+                  onClick={() => {
+                    handleSelect("category");
+                    navigate("/category");
+                  }}
+                  className={`${
+                    currentSelected === "category"
+                      ? "bg-sidebar-color text-sidebar-color"
+                      : ""
+                  }`}
                 >
                   <ListItemPrefix>
-                    <ClipboardDocumentIcon
+                    <ArchiveBoxIcon
                       className={`transition-all duration-200 ${
                         isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
                       }`}
@@ -195,108 +295,15 @@ function Sidebar({
                   </ListItemPrefix>
                   <Typography
                     variant="h6"
-                    color="blue-gray"
-                    className={`transition-all duration-200 mr-auto ${
+                    className={`transition-all duration-200 ${
                       isDrawerOpen ? "block" : "hidden"
                     } ease-in-out`}
                   >
-                    {t("materials-management")}
+                    {t("category-management")}
                   </Typography>
-                </AccordionHeader>
-              </ListItem>
-              <AccordionBody className="py-1">
-                <List className="p-0">
-                  <ListItem
-                    selected={currentSelected === "product"}
-                    onClick={() => {
-                      handleSelect("product");
-                      navigate("/product");
-                    }}
-                    className={`${
-                      currentSelected === "product"
-                        ? "bg-sidebar-color text-sidebar-color"
-                        : ""
-                    }`}
-                  >
-                    <ListItemPrefix>
-                      <ChevronRightIcon
-                        strokeWidth={3}
-                        className={`transition-all duration-200 ${
-                          isDrawerOpen ? "h-3 w-5" : "h-3 w-5"
-                        }`}
-                      />
-                    </ListItemPrefix>
-                    <Typography
-                      variant="h6"
-                      className={`transition-all duration-200 ${
-                        isDrawerOpen ? "block" : "hidden"
-                      } ease-in-out`}
-                    >
-                      {t("list-materials")}
-                    </Typography>
-                  </ListItem>
-                  <ListItem
-                    selected={currentSelected === "assign-device"}
-                    onClick={() => {
-                      handleSelect("assign-device");
-                      navigate("/assign-device");
-                    }}
-                    className={`${
-                      currentSelected === "assign-device"
-                        ? "bg-sidebar-color text-sidebar-color"
-                        : ""
-                    }`}
-                  >
-                    <ListItemPrefix>
-                      <ChevronRightIcon
-                        strokeWidth={3}
-                        className={`transition-all duration-200 ${
-                          isDrawerOpen ? "h-3 w-5" : "h-3 w-5"
-                        }`}
-                      />
-                    </ListItemPrefix>
-                    <Typography
-                      variant="h6"
-                      className={`transition-all duration-200 ${
-                        isDrawerOpen ? "block" : "hidden"
-                      } ease-in-out`}
-                    >
-                      {t("equip-handover")}
-                    </Typography>
-                  </ListItem>
-                </List>
-              </AccordionBody>
-            </Accordion>
-
-            <ListItem
-              selected={currentSelected === "category"}
-              onClick={() => {
-                handleSelect("category");
-                navigate("/category");
-              }}
-              className={`${
-                currentSelected === "category"
-                  ? "bg-sidebar-color text-sidebar-color"
-                  : ""
-              }`}
-            >
-              <ListItemPrefix>
-                <ArchiveBoxIcon
-                  className={`transition-all duration-200 ${
-                    isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                  }`}
-                />
-              </ListItemPrefix>
-              <Typography
-                variant="h6"
-                className={`transition-all duration-200 ${
-                  isDrawerOpen ? "block" : "hidden"
-                } ease-in-out`}
-              >
-                {t("category-management")}
-              </Typography>
-            </ListItem>
-
+                </ListItem>
+              </>
+            )}
             {roles.includes("ADMIN") && (
               <ListItem
                 selected={currentSelected === "user-management"}
@@ -327,64 +334,159 @@ function Sidebar({
                 </Typography>
               </ListItem>
             )}
-
-            <ListItem
-              selected={currentSelected === "statiscis"}
-              onClick={() => {
-                handleSelect("statiscis");
-                navigate("/statiscis");
-              }}
-              className={`${
-                currentSelected === "statiscis"
-                  ? "bg-sidebar-color text-sidebar-color"
-                  : ""
-              }`}
-            >
-              <ListItemPrefix>
-                <ChartBarIcon
-                  className={`transition-all duration-200 ${
-                    isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                  }`}
-                />
-              </ListItemPrefix>
-              <Typography
-                variant="h6"
-                className={`transition-all duration-200 ${
-                  isDrawerOpen ? "block" : "hidden"
-                } ease-in-out`}
+            {(roles.includes("ADMIN")) && (
+              <ListItem
+                selected={currentSelected === "notification"}
+                onClick={() => {
+                  handleSelect("notification");
+                  navigate("/notification");
+                }}
+                className={`${
+                  currentSelected === "notification"
+                    ? "bg-sidebar-color text-sidebar-color"
+                    : ""
+                }`}
               >
-                {t("statiscis")}
-              </Typography>
-            </ListItem>
-            <ListItem
-                  selected={currentSelected === "notification"}
-                  onClick={() => {
-                    handleSelect("notification");
-                    navigate("/notification");
-                  }}
-                  className={`${
-                    currentSelected === "notification"
-                      ? "bg-sidebar-color text-sidebar-color"
-                      : ""
-                  }`}
-                >
-                  <ListItemPrefix>
-                    <BellIcon
-                      className={`transition-all duration-200 ${
-                        isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                      }`}
-                    />
-                  </ListItemPrefix>
-                  <Typography
-                    variant="h6"
+                <ListItemPrefix>
+                  <BellIcon
                     className={`transition-all duration-200 ${
-                      isDrawerOpen ? "block" : "hidden"
-                    } ease-in-out`}
-                  >
-                    {/* {t("notification")} */}
-                    Thông Báo
-                  </Typography>
-                </ListItem>
+                      isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    }`}
+                  />
+                </ListItemPrefix>
+                <Typography
+                  variant="h6"
+                  className={`transition-all duration-200 ${
+                    isDrawerOpen ? "block" : "hidden"
+                  } ease-in-out`}
+                >
+                  {/* {t("notification")} */}
+                  Thông Báo
+                </Typography>
+              </ListItem>
+            )}
+            {(roles.includes("ADMIN") || roles.includes("MANAGE")) && (
+              <ListItem
+                selected={currentSelected === "feedbackmanagement"}
+                onClick={() => {
+                  handleSelect("feedbackmanagement");
+                  navigate("/feedbackmanagement");
+                }}
+                className={`${
+                  currentSelected === "feedbackmanagement"
+                    ? "bg-sidebar-color text-sidebar-color"
+                    : ""
+                }`}
+              >
+                <ListItemPrefix>
+                  <ChatBubbleLeftRightIcon
+                    className={`transition-all duration-200 ${
+                      isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    }`}
+                  />
+                </ListItemPrefix>
+                <Typography
+                  variant="h6"
+                  className={`transition-all duration-200 ${
+                    isDrawerOpen ? "block" : "hidden"
+                  } ease-in-out`}
+                >
+                  Quản lý phản hồi
+                </Typography>
+              </ListItem>
+            )}
+
+            {(roles.includes("ADMIN") || roles.includes("MANAGE")) && (
+              <ListItem
+                selected={currentSelected === "statiscis"}
+                onClick={() => {
+                  handleSelect("statiscis");
+                  navigate("/statiscis");
+                }}
+                className={`${
+                  currentSelected === "statiscis"
+                    ? "bg-sidebar-color text-sidebar-color"
+                    : ""
+                }`}
+              >
+                <ListItemPrefix>
+                  <ChartBarIcon
+                    className={`transition-all duration-200 ${
+                      isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    }`}
+                  />
+                </ListItemPrefix>
+                <Typography
+                  variant="h6"
+                  className={`transition-all duration-200 ${
+                    isDrawerOpen ? "block" : "hidden"
+                  } ease-in-out`}
+                >
+                  {t("statiscis")}
+                </Typography>
+              </ListItem>
+            )}
+
+            {roles.includes("STAFF") && (
+              <ListItem
+                selected={currentSelected === "personal-device"}
+                onClick={() => {
+                  handleSelect("personal-device");
+                  navigate("/personal-device");
+                }}
+                className={`${
+                  currentSelected === "personal-device"
+                    ? "bg-sidebar-color text-sidebar-color"
+                    : ""
+                }`}
+              >
+                <ListItemPrefix>
+                  <BriefcaseIcon
+                    className={`transition-all duration-200 ${
+                      isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    }`}
+                  />
+                </ListItemPrefix>
+                <Typography
+                  variant="h6"
+                  className={`transition-all duration-200 ${
+                    isDrawerOpen ? "block" : "hidden"
+                  } ease-in-out`}
+                >
+                  Vật Tư Cá Nhân
+                </Typography>
+              </ListItem>
+            )}
+            {roles.includes("STAFF") && (
+              <ListItem
+                selected={currentSelected === "feedback"}
+                onClick={() => {
+                  handleSelect("feedback");
+                  navigate("/feedback");
+                }}
+                className={`${
+                  currentSelected === "feedback"
+                    ? "bg-sidebar-color text-sidebar-color"
+                    : ""
+                }`}
+              >
+                <ListItemPrefix>
+                  <ChatBubbleLeftRightIcon
+                    className={`transition-all duration-200 ${
+                      isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    }`}
+                  />
+                </ListItemPrefix>
+                <Typography
+                  variant="h6"
+                  className={`transition-all duration-200 ${
+                    isDrawerOpen ? "block" : "hidden"
+                  } ease-in-out`}
+                >
+                  Phản Hồi
+                </Typography>
+              </ListItem>
+            )}
           </List>
         </div>
       </Card>

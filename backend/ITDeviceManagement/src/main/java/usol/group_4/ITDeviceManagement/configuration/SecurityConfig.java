@@ -29,18 +29,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeRequests().antMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .antMatchers("/api/v1/user/myInfo", "/api/v1/user/updateProfile", "/api/v1/user/updatePassword","/api/v1/user/getRoleByUser", "/api/v1/auth/introspect", "/api/v1/auth/logout")
-                .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
+                .antMatchers("/api/v1/user/myInfo", "/api/v1/user/updateProfile", "/api/v1/user/updatePassword","/api/v1/user/getRoleByUser","/api/v1/user/admins-managers", "/api/v1/auth/introspect", "/api/v1/auth/logout")
+                .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name(), Role.STAFF.name())
                 .antMatchers("/api/v1/categories/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/owners/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
+                .antMatchers("/api/v1/devices/approve-assignment","/api/v1/devices/assignments","/api/v1/devices/assignments/reject","/api/v1/devices/assignments/return", "/api/v1/devices/{assignmentId}/download-pdf")
+                .hasRole(Role.STAFF.name())
                 .antMatchers("/api/v1/devices/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/excels/**")
                 .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name())
                 .antMatchers("/api/v1/user/**","/api/notifications/**")
                 .hasRole(Role.ADMIN.name())
+//                .antMatchers("/api/v1/requests/my-requests", "/api/v1/requests/create", "/api/v1/requests/{requestId}")
+//                .hasRole(Role.STAFF.name()) // Dành cho Staff
+                .antMatchers("/api/v1/requests/**")
+                .hasAnyRole(Role.ADMIN.name(), Role.MANAGE.name(), Role.STAFF.name()) // Dành cho Admin/Manager
                 .anyRequest().authenticated().and()
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder)
                         .jwtAuthenticationConverter(jwtAuthenticationConverter())).authenticationEntryPoint(new JwtAuthenticationEntryPoint())).csrf().disable();

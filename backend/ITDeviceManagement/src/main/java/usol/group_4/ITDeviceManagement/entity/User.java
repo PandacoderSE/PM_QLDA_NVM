@@ -26,8 +26,8 @@ public class User extends Auditable{
     private String email;
     private String phone;
     private int status;
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Device> devices = new ArrayList<>();
+    @OneToMany(mappedBy = "toUser", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<DeviceAssignment> deviceAssignments = new ArrayList<>();
     @OneToMany(mappedBy = "createdBy", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Notification> notifications = new ArrayList<>();
     @ManyToMany
