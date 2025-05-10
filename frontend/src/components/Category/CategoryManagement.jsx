@@ -542,7 +542,7 @@ const CategoryManagement = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y ">
                 {currentItems.map((category, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="w-6 border-r border-gray-300">
