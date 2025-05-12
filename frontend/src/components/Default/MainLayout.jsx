@@ -26,7 +26,7 @@ const MainLayout = ({
         }`}
       >
         <NavBar handleSelect={handleSelect} />
-        <main className="w-full flex-grow ease-soft-in-out relative h-full max-h-screen rounded-xl transition-all duration-200 mt-4">
+        <main className="w-full flex-grow ease-soft-in-out relative h-full max-h-screen rounded-xl transition-all duration-200 mt-4 ">
           <Outlet />
         </main>
         <ScrollToTopButton />

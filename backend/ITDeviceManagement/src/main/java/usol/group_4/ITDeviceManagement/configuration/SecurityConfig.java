@@ -20,7 +20,7 @@ import usol.group_4.ITDeviceManagement.constant.Role;
 public class SecurityConfig {
     @Autowired
     private CustomJwtDecoder jwtDecoder;
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/refresh", "api/v1/devices/sign-staff/{assignmentId}","/api/v1/devices/{assignmentId}/download-pdf", "api/v1/devices/signature"};
+    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/login", "/api/v1/auth/refresh", "api/v1/devices/sign-staff/{assignmentId}","/api/v1/devices/{assignmentId}/download-pdf", "api/v1/devices/signature", "/api/notifications/getAll"};
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -56,11 +56,11 @@ const NavBar = ({ handleSelect }) => {
 
   return (
     <nav
-      className="relative flex flex-wrap items-center justify-between px-0 py-2 pt-4 mx-6 transition-all shadow-none duration-250 ease-soft-in rounded-2xl lg:flex-nowrap lg:justify-start"
+      className="relative  flex flex-wrap items-center justify-between px-0 py-2 pt-4 mx-6 transition-all shadow-none duration-250 ease-soft-in rounded-2xl lg:flex-nowrap lg:justify-start"
       navbar-main="true"
       navbar-scroll="true"
     >
-      <div className="flex items-center justify-between flex-grow px-4 py-1 mx-auto flex-wrap-inherit">
+      <div className="flex items-center justify-between flex-grow px-4 py-1 mx-auto flex-wrap-inherit ">
         <div className="flex items-center">
           <nav>
             {weather && (
