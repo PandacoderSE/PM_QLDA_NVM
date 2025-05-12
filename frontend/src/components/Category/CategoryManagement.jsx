@@ -437,7 +437,7 @@ const CategoryManagement = () => {
               className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75"
             >
               <div
-                className="bg-white p-5 rounded-lg"
+                className="bg-white p-5 rounded-lg border-t-4 border-orange-500"
                 style={{ width: "500px" }}
               >
                 <h2 className="text-center font-bold uppercase mb-5 mt-5 text-2xl">
@@ -592,7 +592,7 @@ const CategoryManagement = () => {
                     className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75"
                   >
                     <div
-                      className="bg-white p-5 rounded-lg"
+                      className="bg-white p-5 rounded-lg border-t-4 border-orange-500"
                       style={{ width: "500px" }}
                     >
                       <h2 className="text-center font-bold uppercase mb-5 mt-5 text-2xl">

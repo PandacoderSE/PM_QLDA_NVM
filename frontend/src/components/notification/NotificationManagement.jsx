@@ -402,7 +402,7 @@ const NotificationManagement = () => {
         </div>
 
         {/* Notification Card List */}
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4 ">
           <input
             type="checkbox"
             checked={isSelectAllChecked}
@@ -417,7 +417,7 @@ const NotificationManagement = () => {
           {currentItems.map((notification) => (
             <div
               key={notification.id}
-              className=" rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 bg-gray-50"
+              className=" rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 bg-gray-50 border-t-4 border-orange-500"
             >
               <div className="flex items-center justify-between mb-4">
                 <input
@@ -460,9 +460,9 @@ const NotificationManagement = () => {
 
         {/* Detail Modal */}
         {isDetailModalOpen && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-xl">
-              <h3 className="text-2xl font-bold text-blue-600 flex items-center gap-3 mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-xl border-t-4 border-orange-500">
+              <h3 className="text-2xl font-bold text-black-600 flex items-center gap-3 mb-6">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-8 w-8 text-blue-500"
@@ -534,9 +534,9 @@ const NotificationManagement = () => {
 
         {/* Add Modal */}
         {isAddModalOpen && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-xl">
-              <h3 className="text-2xl font-bold text-blue-600 flex items-center gap-3 mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-xl border-t-4 border-orange-500">
+              <h3 className="text-2xl font-bold text-black flex items-center gap-3 mb-6 ">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-8 w-8 text-blue-500"
