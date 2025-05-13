@@ -420,7 +420,7 @@ const UserProduct = () => {
           <div className="flex flex-col items-center">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                index + 1 <= step ? "bg-green-500" : "bg-gray-300"
+                index + 1 <= step ? "bg-gradient-to-r from-orange-500 to-orange-600" : "bg-gray-300"
               }`}
             >
               {index + 1}
@@ -430,7 +430,7 @@ const UserProduct = () => {
           {index < steps.length - 1 && (
             <div
               className={`h-1 w-24 mx-2 ${
-                index + 1 < step ? "bg-green-500" : "bg-gray-300"
+                index + 1 < step ? "bg-gradient-to-r from-orange-500 to-orange-600" : "bg-gray-300"
               }`}
             />
           )}
@@ -462,7 +462,7 @@ const UserProduct = () => {
         <button
           onClick={handleSearch}
           disabled={loading}
-          className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+          className={`w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:bg-orange-900 ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
@@ -534,7 +534,7 @@ const UserProduct = () => {
         </button>
         <button
           onClick={() => setStep(3)}
-          className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:bg-blue-700"
         >
           Tiếp tục
         </button>
@@ -746,7 +746,7 @@ const UserProduct = () => {
             className={`py-2 px-4 rounded-md ${
               selectedDevices.length === 0
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-blue-600 text-white bg-gradient-to-r from-orange-500 to-orange-600"
             }`}
           >
             Tiếp tục
@@ -807,7 +807,7 @@ const UserProduct = () => {
         <button
           onClick={handleAddDeviceForUser}
           disabled={loading}
-          className={`py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 ${
+          className={`py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:bg-green-700 ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
@@ -873,7 +873,7 @@ const UserProduct = () => {
             <img
               src={userSignature}
               alt="Chữ ký hiện tại"
-              className="border border-gray-300 mb-4"
+              className="border border-orange-500 mb-4"
               style={{ width: "500px", height: "200px", objectFit: "contain" }}
             />
           </div>
@@ -885,7 +885,7 @@ const UserProduct = () => {
             />
             <button
               onClick={() => sigCanvas.current.clear()}
-              className="mt-2 bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700"
+              className="mt-2 bg-gray-600 text-white px-4 py-1.5 rounded-lg hover:bg-gray-700"
             >
               Xóa chữ ký
             </button>
@@ -897,14 +897,14 @@ const UserProduct = () => {
           {userSignature ? (
             <button
               onClick={() => handleSignAll(true)}
-              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md "
             >
               Ký tất cả với chữ ký hiện tại
             </button>
           ) : (
             <button
               onClick={() => handleSignAll(false)}
-              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md "
             >
               Ký tất cả
             </button>
@@ -920,7 +920,7 @@ const UserProduct = () => {
               setSignedAssignments({});
               setUserSignature(null);
             }}
-            className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:bg-blue-700"
           >
             Hoàn tất
           </button>

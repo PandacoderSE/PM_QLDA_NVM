@@ -442,7 +442,7 @@ const NotificationManagement = () => {
                 </span>
                 <button
                   onClick={() => handleDetailClick(notification)}
-                  className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition duration-200"
+                  className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition duration-200"
                 >
                   <MdInfo size={20} />
                   Chi tiết
@@ -524,7 +524,7 @@ const NotificationManagement = () => {
               )}
               <button
                 onClick={closeDetailModal}
-                className="mt-8 w-full text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-semibold rounded-lg text-sm px-5 py-3"
+                className="mt-8 w-full text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:outline-none focus:ring-4 focus:ring-blue-300 font-semibold rounded-lg text-sm px-5 py-3"
               >
                 Đóng
               </button>
@@ -592,7 +592,7 @@ const NotificationManagement = () => {
                 <button
                   type="button"
                   onClick={handleConfirmAdd}
-                  className="flex-1 text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 transition duration-200"
+                  className="flex-1 text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:orange-500-700 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 transition duration-200"
                 >
                   Gửi
                 </button>

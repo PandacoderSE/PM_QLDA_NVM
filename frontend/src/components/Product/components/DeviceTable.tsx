@@ -220,7 +220,7 @@ const DeviceTable = ({
                 </td>
                 <td className="p-6 align-middle whitespace-nowrap text-sm font-semibold border-r border-gray-300">
                   <BaseButton
-                    buttonCss="bg-yellow-400 text-white hover:bg-yellow-600 px-2.5 py-2.5 rounded-lg"
+                    buttonCss="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:bg-yellow-600 px-2.5 py-2.5 rounded-lg"
                     id={device.id}
                     onClick={handleButtonClick}
                   >

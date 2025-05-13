@@ -372,7 +372,7 @@ const Persondevice = () => {
         <div className="mb-6">
           <h3 className="text-lg font-bold mb-2">Chữ ký:</h3>
           {userSignature ? (
-            <div className="border border-gray-300 p-2">
+            <div className="border border-orange-300 p-2">
               <img
                 src={userSignature}
                 alt="Chữ ký hiện tại"
@@ -387,7 +387,7 @@ const Persondevice = () => {
                 canvasProps={{
                   width: 500,
                   height: 200,
-                  className: "border border-gray-300",
+                  className: "border border-orange-300",
                 }}
               />
               <button
@@ -403,14 +403,14 @@ const Persondevice = () => {
           {userSignature ? (
             <button
               onClick={() => handleSignAll(true)}
-              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md "
             >
               Ký tất cả với chữ ký hiện tại
             </button>
           ) : (
             <button
               onClick={() => handleSignAll(false)}
-              className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="py-2 px-4 g-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md "
             >
               Ký tất cả
             </button>
@@ -460,7 +460,7 @@ const Persondevice = () => {
             <div className="flex items-end">
               <button
                 onClick={fetchAssignments}
-                className="w-full bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition flex items-center justify-center gap-2"
               >
                 <svg
                   className="w-4 h-4"
@@ -485,7 +485,7 @@ const Persondevice = () => {
           <div className="mb-6 flex justify-end">
             <button
               onClick={handleApprove}
-              className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition shadow-md"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-900 transition shadow-md"
             >
               Xác Nhận ({selectedDevices.length} thiết bị)
             </button>
@@ -559,13 +559,13 @@ const Persondevice = () => {
                         <>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "view")}
-                            className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                           >
                             Xem PDF
                           </button>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "download")}
-                            className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                           >
                             Tải PDF
                           </button>
@@ -574,7 +574,7 @@ const Persondevice = () => {
                       {assignment.status === "ASSIGNED" && (
                         <button
                           onClick={() => handleReturn(assignment.id)}
-                          className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                         >
                           Trả Lại
                         </button>
@@ -614,7 +614,7 @@ const Persondevice = () => {
                 onClick={() => setCurrentPage(index)}
                 className={`px-2 py-1 rounded text-sm ${
                   currentPage === index
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >

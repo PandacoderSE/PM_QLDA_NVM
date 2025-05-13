@@ -39,7 +39,7 @@ const ScrollToTopButton = () => {
       {isVisible && (
         <div
           onClick={scrollToTop}
-          className="fixed bottom-4 right-4 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center cursor-pointer"
+          className="fixed bottom-4 right-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center cursor-pointer"
           style={{ width: "48px", height: "48px" }}
         >
           <KeyboardDoubleArrowUpIcon />

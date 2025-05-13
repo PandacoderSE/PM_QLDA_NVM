@@ -533,7 +533,7 @@ const UserrManagement = () => {
                       <td class="text-center p-2 align-middle bg-transparent border-b-0 whitespace-nowrap shadow-transparent">
                         <button
                           type="button"
-                          className="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900"
+                          className="focus:outline-none text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900"
                           onClick={() => handleEditClick(user.id)}
                         >
                           <MdEdit size={24}/>
@@ -759,13 +759,13 @@ const UserrManagement = () => {
                           <button
                             type="button"
                             onClick={() => handleUpdate(userInfo.id)}
-                            class="w-full justify-center sm:w-auto inline-flex items-center bg-blue-600 text-white hover:opacity-95 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 focus:z-10 "
+                            class="w-full justify-center sm:w-auto inline-flex items-center bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-95 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 focus:z-10 "
                           >
                             {t("update")}
                           </button>
                           <button
                             type="button"
-                            class="w-full justify-center sm:w-auto text-gray-500 inline-flex items-center bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                            class="w-full justify-center sm:w-auto text-gray-500 inline-flex items-center bg-gray-500 text-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
                             onClick={closeEditModal}
                           >
                             <svg

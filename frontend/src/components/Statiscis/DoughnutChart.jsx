@@ -142,7 +142,7 @@ const DoughnutChart = () => {
           <button
             onClick={handleCloseOpenStatiscis}
             type="button"
-            class="ml-4 mt-5 focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+            class="ml-4 mt-5 focus:outline-none text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
           >
             Ẩn xem theo danh mục
           </button>
@@ -150,7 +150,7 @@ const DoughnutChart = () => {
           <button
             onClick={handleOpenStatiscis}
             type="button"
-            class="ml-4 mt-5 focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+            class="ml-4 mt-5 focus:outline-none text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
           >
             Thống kê theo danh mục
           </button>
@@ -159,7 +159,7 @@ const DoughnutChart = () => {
           <button
             onClick={handleCloseDeviceStatus}
             type="button"
-            class="ml-4 mt-5 focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+            class="ml-4 mt-5 focus:outline-none text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
           >
             Ẩn xem theo trạng thái
           </button>
@@ -167,7 +167,7 @@ const DoughnutChart = () => {
           <button
             onClick={handleOpenDeviceStatus}
             type="button"
-            class="ml-4 mt-5 focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+            class="ml-4 mt-5 focus:outline-none text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
           >
             Thống kê theo trạng thái
           </button>

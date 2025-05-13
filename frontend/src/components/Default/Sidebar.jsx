@@ -1,4 +1,4 @@
-// Sidebar_T.jsx
+// Sidebar.jsx
 import React, { useEffect, useState } from "react";
 import {
   Typography,
@@ -25,17 +25,14 @@ import {
   BriefcaseIcon,
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/solid";
-
-import i18n from "../../i18n/i18n";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { getToken } from "../Services/localStorageService";
-import axios from "axios";
 import {
   ChevronRightIcon,
   PresentationChartBarIcon,
 } from "@heroicons/react/24/outline";
-import { use } from "i18next";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { getToken } from "../Services/localStorageService";
+import axios from "axios";
 
 function Sidebar({
   isDrawerOpen,
@@ -45,13 +42,15 @@ function Sidebar({
   isOpenMenu = false,
 }) {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [roles, setRoles] = useState([]);
   const [isOpen, setIsOpen] = useState(isOpenMenu);
   const [currentSelected, setCurrentSelected] = useState(selected);
+
   const handleOpen = () => {
     setIsOpen(!isOpen);
   };
+
   const handleResize = () => {
     if (window.innerWidth < 800 && isDrawerOpen) {
       toggleDrawer();
@@ -59,10 +58,12 @@ function Sidebar({
       toggleDrawer();
     }
   };
+
   useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isDrawerOpen]);
+
   const token = getToken();
   const fetchRoles = async () => {
     try {
@@ -75,11 +76,11 @@ function Sidebar({
         }
       );
       setRoles(response.data.data);
-      console.log(roles);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
+
   useEffect(() => {
     fetchRoles();
   }, []);
@@ -88,16 +89,17 @@ function Sidebar({
     const savedSelected = sessionStorage.getItem("selected");
     setCurrentSelected(savedSelected !== null ? savedSelected : "home");
   }, [selected]);
+
   return (
     <div
-      className={`fixed top-0 left-0 h-full bg-color text-sidebar-color flex flex-col transition-all duration-300 shadow-lg z-10 ${
+      className={`fixed top-0 left-0 h-full bg-white text-gray-800 flex flex-col transition-all duration-300 shadow-lg z-10 ${
         isDrawerOpen ? "w-60" : "w-14"
       }`}
     >
       <Card
         color="transparent"
         shadow={false}
-        className="h-full flex flex-col justify-between text-color"
+        className="h-full flex flex-col justify-between text-gray-800"
       >
         <div>
           <div className="mb-2 flex items-center justify-between p-4">
@@ -123,7 +125,7 @@ function Sidebar({
                 >
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path
-                    className="icon-color"
+                    className="fill-orange-600"
                     d="M3 18h13v-2H3v2zm0-5h10v-2H3v2zm0-7v2h13V6H3zm18 9.59L17.42 12 21 8.41 19.59 7l-5 5 5 5L21 15.59z"
                   />
                 </svg>
@@ -136,7 +138,7 @@ function Sidebar({
                 >
                   <path d="M0 0h24V24H0V0z" fill="none" />
                   <path
-                    className="icon-color"
+                    className="fill-orange-600"
                     transform="rotate(180 12 12)"
                     d="M3 18h13v-2H3v2zm0-5h10v-2H3v2zm0-7v2h13V6H3zm18 9.59L17.42 12 21 8.41 19.59 7l-5 5 5 5L21 15.59z"
                   />
@@ -154,15 +156,15 @@ function Sidebar({
               }}
               className={`${
                 currentSelected === "home"
-                  ? "bg-sidebar-color text-sidebar-color"
-                  : ""
+                  ? "bg-orange-100 text-orange-600"
+                  : "hover:bg-orange-50"
               }`}
             >
               <ListItemPrefix>
                 <HomeIcon
                   className={`transition-all duration-200 ${
                     isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                  }`}
+                  } ${currentSelected === "home" ? "text-orange-600" : ""}`}
                 />
               </ListItemPrefix>
               <Typography
@@ -181,7 +183,7 @@ function Sidebar({
                   icon={
                     <ChevronDownIcon
                       strokeWidth={2.5}
-                      className={`mx-auto h-4 w-4 transition-transform duration-200 ${
+                      className={`mx-auto h-4 w-4 transition-transform duration-200 text-gray-800 ${
                         isOpen ? "rotate-180" : ""
                       } ${isDrawerOpen ? "block" : "hidden"}`}
                     />
@@ -190,7 +192,7 @@ function Sidebar({
                   <ListItem className="p-0" selected={isOpen}>
                     <AccordionHeader
                       onClick={() => handleOpen()}
-                      className="border-b-0 p-3"
+                      className="border-b-0 p-3 text-gray-800 hover:bg-orange-50"
                     >
                       <ListItemPrefix>
                         <ClipboardDocumentIcon
@@ -201,7 +203,6 @@ function Sidebar({
                       </ListItemPrefix>
                       <Typography
                         variant="h6"
-                        color="blue-gray"
                         className={`transition-all duration-200 mr-auto ${
                           isDrawerOpen ? "block" : "hidden"
                         } ease-in-out`}
@@ -220,8 +221,8 @@ function Sidebar({
                         }}
                         className={`${
                           currentSelected === "product"
-                            ? "bg-sidebar-color text-sidebar-color"
-                            : ""
+                            ? "bg-orange-100 text-orange-600"
+                            : "hover:bg-orange-50"
                         }`}
                       >
                         <ListItemPrefix>
@@ -229,6 +230,10 @@ function Sidebar({
                             strokeWidth={3}
                             className={`transition-all duration-200 ${
                               isDrawerOpen ? "h-3 w-5" : "h-3 w-5"
+                            } ${
+                              currentSelected === "product"
+                                ? "text-orange-600"
+                                : ""
                             }`}
                           />
                         </ListItemPrefix>
@@ -249,8 +254,8 @@ function Sidebar({
                         }}
                         className={`${
                           currentSelected === "assign-device"
-                            ? "bg-sidebar-color text-sidebar-color"
-                            : ""
+                            ? "bg-orange-100 text-orange-600"
+                            : "hover:bg-orange-50"
                         }`}
                       >
                         <ListItemPrefix>
@@ -258,6 +263,10 @@ function Sidebar({
                             strokeWidth={3}
                             className={`transition-all duration-200 ${
                               isDrawerOpen ? "h-3 w-5" : "h-3 w-5"
+                            } ${
+                              currentSelected === "assign-device"
+                                ? "text-orange-600"
+                                : ""
                             }`}
                           />
                         </ListItemPrefix>
@@ -282,15 +291,15 @@ function Sidebar({
                   }}
                   className={`${
                     currentSelected === "category"
-                      ? "bg-sidebar-color text-sidebar-color"
-                      : ""
+                      ? "bg-orange-100 text-orange-600"
+                      : "hover:bg-orange-50"
                   }`}
                 >
                   <ListItemPrefix>
                     <ArchiveBoxIcon
                       className={`transition-all duration-200 ${
                         isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                      }`}
+                      } ${currentSelected === "category" ? "text-orange-600" : ""}`}
                     />
                   </ListItemPrefix>
                   <Typography
@@ -313,14 +322,18 @@ function Sidebar({
                 }}
                 className={`${
                   currentSelected === "user-management"
-                    ? "bg-sidebar-color text-sidebar-color"
-                    : ""
+                    ? "bg-orange-100 text-orange-600"
+                    : "hover:bg-orange-50"
                 }`}
               >
                 <ListItemPrefix>
                   <UserIcon
                     className={`transition-all duration-200 ${
                       isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    } ${
+                      currentSelected === "user-management"
+                        ? "text-orange-600"
+                        : ""
                     }`}
                   />
                 </ListItemPrefix>
@@ -334,7 +347,7 @@ function Sidebar({
                 </Typography>
               </ListItem>
             )}
-            {(roles.includes("ADMIN")) && (
+            {roles.includes("ADMIN") && (
               <ListItem
                 selected={currentSelected === "notification"}
                 onClick={() => {
@@ -343,14 +356,16 @@ function Sidebar({
                 }}
                 className={`${
                   currentSelected === "notification"
-                    ? "bg-sidebar-color text-sidebar-color"
-                    : ""
+                    ? "bg-orange-100 text-orange-600"
+                    : "hover:bg-orange-50"
                 }`}
               >
                 <ListItemPrefix>
                   <BellIcon
                     className={`transition-all duration-200 ${
                       isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    } ${
+                      currentSelected === "notification" ? "text-orange-600" : ""
                     }`}
                   />
                 </ListItemPrefix>
@@ -360,7 +375,6 @@ function Sidebar({
                     isDrawerOpen ? "block" : "hidden"
                   } ease-in-out`}
                 >
-                  {/* {t("notification")} */}
                   Thông Báo
                 </Typography>
               </ListItem>
@@ -374,14 +388,18 @@ function Sidebar({
                 }}
                 className={`${
                   currentSelected === "feedbackmanagement"
-                    ? "bg-sidebar-color text-sidebar-color"
-                    : ""
+                    ? "bg-orange-100 text-orange-600"
+                    : "hover:bg-orange-50"
                 }`}
               >
                 <ListItemPrefix>
                   <ChatBubbleLeftRightIcon
                     className={`transition-all duration-200 ${
                       isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    } ${
+                      currentSelected === "feedbackmanagement"
+                        ? "text-orange-600"
+                        : ""
                     }`}
                   />
                 </ListItemPrefix>
@@ -395,7 +413,6 @@ function Sidebar({
                 </Typography>
               </ListItem>
             )}
-
             {(roles.includes("ADMIN") || roles.includes("MANAGE")) && (
               <ListItem
                 selected={currentSelected === "statiscis"}
@@ -405,15 +422,15 @@ function Sidebar({
                 }}
                 className={`${
                   currentSelected === "statiscis"
-                    ? "bg-sidebar-color text-sidebar-color"
-                    : ""
+                    ? "bg-orange-100 text-orange-600"
+                    : "hover:bg-orange-50"
                 }`}
               >
                 <ListItemPrefix>
                   <ChartBarIcon
                     className={`transition-all duration-200 ${
                       isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                    }`}
+                    } ${currentSelected === "statiscis" ? "text-orange-600" : ""}`}
                   />
                 </ListItemPrefix>
                 <Typography
@@ -426,7 +443,6 @@ function Sidebar({
                 </Typography>
               </ListItem>
             )}
-
             {roles.includes("STAFF") && (
               <ListItem
                 selected={currentSelected === "personal-device"}
@@ -436,14 +452,18 @@ function Sidebar({
                 }}
                 className={`${
                   currentSelected === "personal-device"
-                    ? "bg-sidebar-color text-sidebar-color"
-                    : ""
+                    ? "bg-orange-100 text-orange-600"
+                    : "hover:bg-orange-50"
                 }`}
               >
                 <ListItemPrefix>
                   <BriefcaseIcon
                     className={`transition-all duration-200 ${
                       isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
+                    } ${
+                      currentSelected === "personal-device"
+                        ? "text-orange-600"
+                        : ""
                     }`}
                   />
                 </ListItemPrefix>
@@ -466,15 +486,15 @@ function Sidebar({
                 }}
                 className={`${
                   currentSelected === "feedback"
-                    ? "bg-sidebar-color text-sidebar-color"
-                    : ""
+                    ? "bg-orange-100 text-orange-600"
+                    : "hover:bg-orange-50"
                 }`}
               >
                 <ListItemPrefix>
                   <ChatBubbleLeftRightIcon
                     className={`transition-all duration-200 ${
                       isDrawerOpen ? "h-6 w-6" : "h-4 w-4"
-                    }`}
+                    } ${currentSelected === "feedback" ? "text-orange-600" : ""}`}
                   />
                 </ListItemPrefix>
                 <Typography

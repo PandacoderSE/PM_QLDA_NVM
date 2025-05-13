@@ -258,7 +258,7 @@ const FeedBackManagement = () => {
           <div className="flex space-x-4">
             <button
               onClick={handleSearch}
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400"
               disabled={loading}
             >
               Tìm Kiếm
@@ -402,7 +402,7 @@ const FeedBackManagement = () => {
           <div className="flex justify-end space-x-2">
             <button
               onClick={handleSendResponse}
-              className="h-8 w-8 flex items-center justify-center bg-blue-600 text-white rounded-full hover:bg-blue-700 transition disabled:bg-blue-400"
+              className="h-8 w-8 flex items-center justify-center bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:bg-blue-700 transition disabled:bg-blue-400"
               disabled={loading}
               title="Gửi Phản Hồi"
             >

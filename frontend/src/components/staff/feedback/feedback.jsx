@@ -256,13 +256,14 @@ const FeedbackSystem = () => {
               )}
             </select>
           </div>
-          <button
+           <div className="flex justify-end space-x-2"><button
             onClick={handleCreateRequest}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400"
+            className="w-40 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400"
             disabled={loading}
           >
             Gửi Yêu Cầu
-          </button>
+          </button></div>
+          
         </div>
       </div>
 
@@ -388,13 +389,15 @@ const FeedbackSystem = () => {
             placeholder="Nhập phản hồi của bạn..."
             disabled={loading}
           />
+          <div className="flex justify-end space-x-2">
           <button
             onClick={handleSendResponse}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400"
+            className="w-40 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400"
             disabled={loading}
           >
             Gửi Phản Hồi
           </button>
+          </div>
         </div>
       )}
     </div>

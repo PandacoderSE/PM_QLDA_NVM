@@ -33,7 +33,7 @@ const Pagination_T = ({ pageCount, onPageChange }) => {
       }
       activeClassName={"text-black rounded"}
       activeLinkClassName={
-        "block px-3 py-2 leading-tight text-white bg-blue-500 border border-blue-500 rounded"
+        "block px-3 py-2 leading-tight text-white bg-gradient-to-r from-orange-500 to-orange-600 border border-blue-500 rounded"
       }
       disabledClassName={"opacity-50 cursor-not-allowed"}
     />
