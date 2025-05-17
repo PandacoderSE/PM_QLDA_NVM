@@ -14,6 +14,7 @@ const Persondevice = () => {
   const [userSignature, setUserSignature] = useState(null); // Chữ ký hiện có (Base64)
   const [isSigning, setIsSigning] = useState(false); // Điều khiển màn hình ký
   const [approvedAssignmentIds, setApprovedAssignmentIds] = useState([]); // Danh sách assignmentId đã xác nhận
+  const [isNewSignatureMode, setIsNewSignatureMode] = useState(false); // Trạng thái nhập chữ ký mới
   const sigCanvas = useRef(null);
   const token = getToken();
 
@@ -308,6 +309,7 @@ const Persondevice = () => {
       handleAlert("Thành công", "Đã ký tất cả bàn giao thành công!", "success");
       setIsSigning(false);
       setApprovedAssignmentIds([]);
+      setIsNewSignatureMode(false);
       if (sigCanvas.current) sigCanvas.current.clear();
       fetchAssignments();
       checkUserSignature();
@@ -316,6 +318,13 @@ const Persondevice = () => {
     }
   };
 
+  // Handle new signature mode
+  const handleNewSignature = () => {
+    setIsNewSignatureMode(true);
+    if (sigCanvas.current) sigCanvas.current.clear();
+  };
+
+  // Render?title=Handling%20multiple%20signatures%20on%20one%20page%20-%20HTML%20&%20CSS%20-%20SitePoint%20Forums%20-%20Web%20Development%20&%20Design%20Community%20-%20Sign%20in%20to%20your%20account%20or%20Register%20for%20an%20account%20to%20start%20contributing.
   // Render signing screen
   const renderSigningScreen = () => {
     return (
@@ -371,13 +380,21 @@ const Persondevice = () => {
         </div>
         <div className="mb-6">
           <h3 className="text-lg font-bold mb-2">Chữ ký:</h3>
-          {userSignature ? (
+          {userSignature && !isNewSignatureMode ? (
             <div className="border border-orange-300 p-2">
               <img
                 src={userSignature}
                 alt="Chữ ký hiện tại"
                 className="w-[300px] h-[200px] object-contain"
               />
+              {/* <div className="mt-2 flex gap-2">
+                <button
+                  onClick={handleNewSignature}
+                  className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700"
+                >
+                  Chữ ký mới
+                </button>
+              </div> */}
             </div>
           ) : (
             <div>
@@ -390,27 +407,35 @@ const Persondevice = () => {
                   className: "border border-orange-300",
                 }}
               />
-              <button
-                onClick={() => sigCanvas.current?.clear()}
-                className="mt-2 bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700"
-              >
-                Xóa chữ ký
-              </button>
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => sigCanvas.current?.clear()}
+                  className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700"
+                >
+                  Xóa chữ ký
+                </button>
+                {/* <button
+                  onClick={handleNewSignature}
+                  className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700"
+                >
+                  Chữ ký mới
+                </button> */}
+              </div>
             </div>
           )}
         </div>
         <div className="flex justify-between">
-          {userSignature ? (
+          {userSignature && !isNewSignatureMode ? (
             <button
               onClick={() => handleSignAll(true)}
-              className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md "
+              className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md"
             >
               Ký tất cả với chữ ký hiện tại
             </button>
           ) : (
             <button
               onClick={() => handleSignAll(false)}
-              className="py-2 px-4 g-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md "
+              className="py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md"
             >
               Ký tất cả
             </button>
@@ -460,7 +485,7 @@ const Persondevice = () => {
             <div className="flex items-end">
               <button
                 onClick={fetchAssignments}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 transition flex items-center justify-center gap-2"
               >
                 <svg
                   className="w-4 h-4"
@@ -559,13 +584,13 @@ const Persondevice = () => {
                         <>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "view")}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                           >
                             Xem PDF
                           </button>
                           <button
                             onClick={() => handlePdfAction(assignment.id, "download")}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                           >
                             Tải PDF
                           </button>
@@ -574,7 +599,7 @@ const Persondevice = () => {
                       {assignment.status === "ASSIGNED" && (
                         <button
                           onClick={() => handleReturn(assignment.id)}
-                          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition shadow-sm"
                         >
                           Trả Lại
                         </button>
@@ -604,7 +629,7 @@ const Persondevice = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M15 19l-7-7 7-7"
+                  d="M15 19074-7 7l7-7"
                 />
               </svg>
             </button>

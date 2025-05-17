@@ -279,8 +279,8 @@ const NotificationManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white-100">
-      <div className="container p-5">
+    <div className="p-6 bg-white min-h-screen">
+      <div>
         <h3 className="text-center font-bold text-3xl text-gray-800 mb-8">
           Danh Sách Thông Báo
         </h3>

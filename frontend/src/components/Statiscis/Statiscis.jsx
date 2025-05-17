@@ -162,14 +162,14 @@ const Statiscis = () => {
               </div>
             </div>
             <DoughnutChart />
-            <div className="mx-auto my-4">
+            {/* <div className="mx-auto my-4">
               <button
                 onClick={openModal}
                 className="text-white bg-gradient-to-r from-orange-500 to-orange-600 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
               >
                 Xem chi tiết
               </button>
-            </div>
+            </div> */}
 
             {isModalOpen && (
               <Modal

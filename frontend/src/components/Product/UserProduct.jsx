@@ -24,7 +24,10 @@ const UserProduct = () => {
   const [ownerIdError, setOwnerIdError] = useState("");
   const [assignmentIds, setAssignmentIds] = useState([]);
   const [signedAssignments, setSignedAssignments] = useState({});
-  const [userSignature, setUserSignature] = useState(null); // Lưu chữ ký có sẵn (Base64)
+  const [userSignature, setUserSignature] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const devicesPerPage = 10;
+  const maxPageButtons = 5; // Show only 5 page buttons at a time
   const sigCanvas = useRef(null);
   const token = getToken();
   const MySwal = withReactContent(Swal);
@@ -101,6 +104,7 @@ const UserProduct = () => {
       );
       setDeviceList(response.data.data);
       setSelectedDevices([]);
+      setCurrentPage(1);
     } catch (error) {
       MySwal.fire("Lỗi", "Không thể tải danh sách thiết bị!", "error");
     }
@@ -274,6 +278,7 @@ const UserProduct = () => {
       }
       setDeviceList(response.data);
       setSelectedDevices([]);
+      setCurrentPage(1);
     } catch (error) {
       MySwal.fire("Lỗi", "Không thể tìm kiếm thiết bị!", "error");
     }
@@ -283,10 +288,9 @@ const UserProduct = () => {
   const saveSignature = async (assignmentId, useExisting = false) => {
     try {
       if (useExisting) {
-        // Sử dụng chữ ký có sẵn
         const response = await axios.post(
           `http://localhost:8080/api/v1/devices/sign/${assignmentId}`,
-          {}, // Không gửi chữ ký
+          {},
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -296,13 +300,12 @@ const UserProduct = () => {
         if (response.data.success) {
           setSignedAssignments((prev) => ({
             ...prev,
-            [assignmentId]: userSignature, // Lưu chữ ký để hiển thị
+            [assignmentId]: userSignature,
           }));
         } else {
           MySwal.fire("Lỗi", "API trả về không thành công!", "error");
         }
       } else {
-        // Vẽ chữ ký mới
         if (!sigCanvas.current) {
           MySwal.fire("Lỗi", "Không thể truy cập canvas chữ ký!", "error");
           return;
@@ -337,7 +340,7 @@ const UserProduct = () => {
             ...prev,
             [assignmentId]: signatureData,
           }));
-          setUserSignature(signatureData); // Cập nhật chữ ký có sẵn
+          setUserSignature(signatureData);
         } else {
           MySwal.fire("Lỗi", "API trả về không thành công!", "error");
         }
@@ -542,219 +545,297 @@ const UserProduct = () => {
     </div>
   );
 
-  const renderStep3 = () => (
-    <div className="bg-white p-6 rounded-lg shadow-md w-full h-[calc(100vh-96px)] flex">
-      <div className="w-1/3 pr-4 border-r border-gray-300">
-        <h3 className="text-lg font-bold mb-4">Tìm kiếm thiết bị</h3>
-        <form onSubmit={handleSearchInfor}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Mã nhân viên
-            </label>
-            <input
-              type="text"
-              name="ownerId"
-              value={ownerId}
-              onChange={(e) => setOwnerId(e.target.value)}
-              onInput={handleInput}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Mã nhân viên"
-            />
-            {ownerIdError && (
-              <p className="text-red-500 text-sm mt-1">{ownerIdError}</p>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Từ ngày
-            </label>
-            <input
-              type="text"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => (e.target.type = "text")}
-              onKeyDown={(e) => e.preventDefault()}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Từ ngày"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Đến ngày
-            </label>
-            <input
-              type="text"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => (e.target.type = "text")}
-              onKeyDown={(e) => e.preventDefault()}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Đến ngày"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Serial Number
-            </label>
-            <input
-              type="text"
-              name="serialNumber"
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
-              onInput={handleInput}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Serial Number"
-            />
-            {serialNumberError && (
-              <p className="text-red-500 text-sm mt-1">{serialNumberError}</p>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Danh mục
-            </label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Chọn danh mục</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Trạng thái thiết bị
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="CHUA_SU_DUNG">Chưa sử dụng</option>
-              <option value="DA_SU_DUNG">Đã sử dụng</option>
-              <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            disabled={serialNumberError || ownerIdError}
-            className={`w-full py-2 px-4 rounded-md ${
-              serialNumberError || ownerIdError
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gray-800 text-white hover:bg-gray-900"
-            }`}
-          >
-            Tìm kiếm
-          </button>
-        </form>
-      </div>
-      <div className="w-2/3 pl-4 no-scrollbar">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Bước 3: Chọn thiết bị
-        </h2>
-        <div className="flex justify-end mb-4">
-          {selectedDevices.length > 0 ? (
-            <>
-              <button
-                onClick={handleTranferEmptyDevice}
-                className="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600 mr-2"
+  const renderStep3 = () => {
+    // Pagination logic
+    const indexOfLastDevice = currentPage * devicesPerPage;
+    const indexOfFirstDevice = indexOfLastDevice - devicesPerPage;
+    const currentDevices = deviceList.slice(indexOfFirstDevice, indexOfLastDevice);
+    const totalPages = Math.ceil(deviceList.length / devicesPerPage);
+
+    // Calculate the range of page buttons to show
+    const startPage = Math.floor((currentPage - 1) / maxPageButtons) * maxPageButtons + 1;
+    const endPage = Math.min(startPage + maxPageButtons - 1, totalPages);
+    const pageNumbers = Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index
+    );
+
+    const handlePageChange = (pageNumber) => {
+      setCurrentPage(pageNumber);
+    };
+
+    const handleNextSet = () => {
+      if (endPage < totalPages) {
+        setCurrentPage(endPage + 1);
+      }
+    };
+
+    const handlePrevSet = () => {
+      if (startPage > 1) {
+        setCurrentPage(startPage - 1);
+      }
+    };
+
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md w-full h-[calc(100vh-96px)] flex">
+        <div className="w-1/3 pr-4 border-r border-gray-300">
+          <h3 className="text-lg font-bold mb-4">Tìm kiếm thiết bị</h3>
+          <form onSubmit={handleSearchInfor}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Mã nhân viên
+              </label>
+              <input
+                type="text"
+                name="ownerId"
+                value={ownerId}
+                onChange={(e) => setOwnerId(e.target.value)}
+                onInput={handleInput}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Mã nhân viên"
+              />
+              {ownerIdError && (
+                <p className="text-red-500 text-sm mt-1">{ownerIdError}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Từ ngày
+              </label>
+              <input
+                type="text"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                onFocus={(e) => (e.target.type = "date")}
+                onBlur={(e) => (e.target.type = "text")}
+                onKeyDown={(e) => e.preventDefault()}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Từ ngày"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Đến ngày
+              </label>
+              <input
+                type="text"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                onFocus={(e) => (e.target.type = "date")}
+                onBlur={(e) => (e.target.type = "text")}
+                onKeyDown={(e) => e.preventDefault()}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Đến ngày"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Serial Number
+              </label>
+              <input
+                type="text"
+                name="serialNumber"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                onInput={handleInput}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Serial Number"
+              />
+              {serialNumberError && (
+                <p className="text-red-500 text-sm mt-1">{serialNumberError}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Danh mục
+              </label>
+              <select
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
-                Xóa bàn giao
-              </button>
+                <option value="">Chọn danh mục</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Trạng thái thiết bị
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="CHUA_SU_DUNG">Chưa sử dụng</option>
+                <option value="DA_SU_DUNG">Đã sử dụng</option>
+                <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={serialNumberError || ownerIdError}
+              className={`w-full py-2 px-4 rounded-md ${
+                serialNumberError || ownerIdError
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-800 text-white hover:bg-gray-900"
+              }`}
+            >
+              Tìm kiếm
+            </button>
+          </form>
+        </div>
+        <div className="w-2/3 pl-4 no-scrollbar">
+          <h2 className="text-2xl font-bold mb-4 text-center">
+            Bước 3: Chọn thiết bị
+          </h2>
+          <div className="flex justify-end mb-4">
+            {selectedDevices.length > 0 ? (
+              <>
+                <button
+                  onClick={handleTranferEmptyDevice}
+                  className="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600 mr-2"
+                >
+                  Xóa bàn giao
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  disabled
+                  className="py-2 px-4 bg-red-300 text-white rounded-md mr-2"
+                >
+                  Xóa bàn giao
+                </button>
+              </>
+            )}
+          </div>
+          {loading ? (
+            <p className="text-center">Đang tải danh sách thiết bị...</p>
+          ) : currentDevices.length > 0 ? (
+            <>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-left"></th>
+                    <th className="border border-gray-300 p-2 text-left">
+                      Serial Number
+                    </th>
+                    <th className="border border-gray-300 p-2 text-left">
+                      Tên vật tư
+                    </th>
+                    <th className="border border-gray-300 p-2 text-left">
+                      Tên danh mục
+                    </th>
+                    <th className="border border-gray-300 p-2 text-left">
+                      Trạng thái
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentDevices.map((device, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedDevices.includes(device[0])}
+                          onChange={() => handleCheckboxChange(device[0])}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-2">{device[0]}</td>
+                      <td className="border border-gray-300 p-2">{device[1]}</td>
+                      <td className="border border-gray-300 p-2">{device[2]}</td>
+                      <td className="border border-gray-300 p-2">
+                        {device[6] === "DA_SU_DUNG" ? (
+                          <span className="text-green-500">Đã sử dụng</span>
+                        ) : device[6] === "CHO_XAC_NHAN" ? (
+                          <span className="text-yellow-500">Chờ xác nhận</span>
+                        ) : (
+                          <span className="text-red-500">Chưa sử dụng</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {/* Pagination Controls */}
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={handlePrevSet}
+                  disabled={startPage === 1}
+                  className={`px-4 py-2 mx-1 rounded-md ${
+                    startPage === 1
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  Trước
+                </button>
+                {startPage > 1 && (
+                  <span className="px-4 py-2 mx-1 text-gray-700">...</span>
+                )}
+                {pageNumbers.map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 mx-1 rounded-md ${
+                      currentPage === page
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                {endPage < totalPages && (
+                  <span className="px-4 py-2 mx-1 text-gray-700">...</span>
+                )}
+                <button
+                  onClick={handleNextSet}
+                  disabled={endPage === totalPages}
+                  className={`px-4 py-2 mx-1 rounded-md ${
+                    endPage === totalPages
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  Sau
+                </button>
+              </div>
             </>
           ) : (
-            <>
-              <button
-                disabled
-                className="py-2 px-4 bg-red-300 text-white rounded-md mr-2"
-              >
-                Xóa bàn giao
-              </button>
-            </>
+            <p className="text-center text-gray-500">
+              Không có thiết bị nào phù hợp.
+            </p>
           )}
-        </div>
-        {loading ? (
-          <p className="text-center">Đang tải danh sách thiết bị...</p>
-        ) : deviceList.length > 0 ? (
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-300 p-2 text-left"></th>
-                <th className="border border-gray-300 p-2 text-left">
-                  Serial Number
-                </th>
-                <th className="border border-gray-300 p-2 text-left">
-                  Tên vật tư
-                </th>
-                <th className="border border-gray-300 p-2 text-left">
-                  Tên danh mục
-                </th>
-                <th className="border border-gray-300 p-2 text-left">
-                  Trạng thái
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {deviceList.map((device, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-300 p-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedDevices.includes(device[0])}
-                      onChange={() => handleCheckboxChange(device[0])}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                    />
-                  </td>
-                  <td className="border border-gray-300 p-2">{device[0]}</td>
-                  <td className="border border-gray-300 p-2">{device[1]}</td>
-                  <td className="border border-gray-300 p-2">{device[2]}</td>
-                  <td className="border border-gray-300 p-2">
-                    {device[6] === "DA_SU_DUNG" ? (
-                      <span className="text-green-500">Đã sử dụng</span>
-                    ) : device[6] === "CHO_XAC_NHAN" ? (
-                      <span className="text-yellow-500">Chờ xác nhận</span>
-                    ) : (
-                      <span className="text-red-500">Chưa sử dụng</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-center text-gray-500">
-            Không có thiết bị nào phù hợp.
-          </p>
-        )}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => setStep(2)}
-            className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-          >
-            Quay lại
-          </button>
-          <button
-            onClick={() => setStep(4)}
-            disabled={selectedDevices.length === 0}
-            className={`py-2 px-4 rounded-md ${
-              selectedDevices.length === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white bg-gradient-to-r from-orange-500 to-orange-600"
-            }`}
-          >
-            Tiếp tục
-          </button>
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={() => setStep(2)}
+              className="py-2 px-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+            >
+              Quay lại
+            </button>
+            <button
+              onClick={() => setStep(4)}
+              disabled={selectedDevices.length === 0}
+              className={`py-2 px-4 rounded-md ${
+                selectedDevices.length === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 text-white bg-gradient-to-r from-orange-500 to-orange-600"
+              }`}
+            >
+              Tiếp tục
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderStep4 = () => (
     <div className="bg-white p-6 rounded-lg shadow-md w-full h-[calc(100vh-96px)] no-scrollbar">
